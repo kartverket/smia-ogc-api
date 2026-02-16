@@ -1,0 +1,15 @@
+[project]
+name = "boplikt"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flask-cors>=6.0.2",
+    "geoalchemy2>=0.18.1",
+    "gevent>=25.9.1",
+    "gunicorn>=25.0.3",
+    "prometheus-flask-exporter>=0.23.2",
+    "psycopg2-binary>=2.9.11",
+    "pygeoapi>=0.22.0",
+]

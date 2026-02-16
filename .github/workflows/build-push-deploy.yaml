@@ -1,0 +1,64 @@
+name: Build, push and deploy to ArgoCD
+on:
+  push:
+    branches: ["main"]
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: kartverket/smia-ogc-api
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      actions: read
+
+    outputs:
+      version: ${{ steps.set_output.outputs.version }}
+      image_url: ${{ steps.set_output.outputs.image_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build docker and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag_version.outputs.new_tag }} , ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Set output with build values
+        id: set_output
+        run: |
+          echo "version=${{ steps.tag_version.outputs.new_tag }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+          echo "image_url=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
+
+  deploy-argo:
+    permissions:
+      id-token: write
+    needs: build
+    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
+    with:
+      application: smia-ogc-api
+      version: ${{ needs.build.outputs.version }}
+      namespace: "smia-tjenester-main"
+      deploy_dev: true
+      identity: restapi
