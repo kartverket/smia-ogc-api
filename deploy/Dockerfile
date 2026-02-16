@@ -11,6 +11,7 @@ RUN chown -R 150:150 /pygeoapi
 
 ENV WSGI_APP=pygeoapi.entrypoint:app
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp
+ENV PYGEOAPI_OPENAPI=/tmp/local.openapi.yml
 
 USER 150:150
 
