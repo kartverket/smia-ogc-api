@@ -51,6 +51,22 @@ jobs:
           echo "version=${{ steps.tag_version.outputs.new_tag }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
           echo "image_url=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
 
+  pharos:
+    name: Run Pharos security scan
+    needs: build
+    permissions:
+      actions: read
+      packages: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Run Pharos"
+        uses: kartverket/pharos@v0.6.0
+        with:
+          allow_severity_level: critical
+          image_url: ${{ needs.build.outputs.image_url }}
+
   deploy-argo:
     permissions:
       id-token: write
