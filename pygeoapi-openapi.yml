@@ -98,7 +98,7 @@ components:
       name: resourceId
       required: true
       schema:
-        default: fylker
+        default: bopliktomraade
         type: string
     skipGeometry:
       description: This option can be used to skip response geometries for each feature.
@@ -255,10 +255,10 @@ paths:
       summary: Collections
       tags:
       - server
-  /collections/fylker:
+  /collections/bopliktomraade:
     get:
-      description: Fylker
-      operationId: describeFylkerCollection
+      description: "Bopliktomr\xE5der"
+      operationId: describeBopliktomraadeCollection
       parameters:
       - $ref: '#/components/parameters/f'
       - $ref: '#/components/parameters/lang'
@@ -271,13 +271,13 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Fylke metadata
+      summary: "Get Bopliktomr\xE5de metadata"
       tags:
-      - fylker
-  /collections/fylker/items:
+      - bopliktomraade
+  /collections/bopliktomraade/items:
     get:
-      description: Fylker
-      operationId: getFylkerFeatures
+      description: "Bopliktomr\xE5der"
+      operationId: getBopliktomraadeFeatures
       parameters:
       - $ref: '#/components/parameters/f'
       - $ref: '#/components/parameters/lang'
@@ -306,20 +306,12 @@ paths:
         schema:
           items:
             enum:
+            - kommunenummer
             - fylkesnummer
-            - samiskforvaltningsomrade
-            - navn_norsk
-            - navn_pri_1
-            - navn_pri_2
-            - navn_pri_3
-            - navn_pri_1_sprak
-            - navn_pri_2_sprak
-            - navn_pri_3_sprak
-            - punkt_i_omrade
-            - punkt_i_omrade_json
-            - bbox
-            - bbox_json
-            - bbox_enkel
+            - delvis_boplikt
+            - forskriftsreferanse
+            - informasjon
+            - opphav
             type: string
           type: array
         style: form
@@ -329,6 +321,13 @@ paths:
       - $ref: '#/components/parameters/offset'
       - explode: false
         in: query
+        name: kommunenummer
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: false
+        in: query
         name: fylkesnummer
         required: false
         schema:
@@ -336,56 +335,28 @@ paths:
         style: form
       - explode: false
         in: query
-        name: samiskforvaltningsomrade
+        name: delvis_boplikt
         required: false
         schema:
           type: boolean
         style: form
       - explode: false
         in: query
-        name: navn_norsk
+        name: forskriftsreferanse
         required: false
         schema:
           type: string
         style: form
       - explode: false
         in: query
-        name: navn_pri_1
+        name: informasjon
         required: false
         schema:
           type: string
         style: form
       - explode: false
         in: query
-        name: navn_pri_2
-        required: false
-        schema:
-          type: string
-        style: form
-      - explode: false
-        in: query
-        name: navn_pri_3
-        required: false
-        schema:
-          type: string
-        style: form
-      - explode: false
-        in: query
-        name: navn_pri_1_sprak
-        required: false
-        schema:
-          type: string
-        style: form
-      - explode: false
-        in: query
-        name: navn_pri_2_sprak
-        required: false
-        schema:
-          type: string
-        style: form
-      - explode: false
-        in: query
-        name: navn_pri_3_sprak
+        name: opphav
         required: false
         schema:
           type: string
@@ -399,21 +370,21 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Fylke items
+      summary: "Get Bopliktomr\xE5de items"
       tags:
-      - fylker
+      - bopliktomraade
     options:
-      description: Fylker
-      operationId: optionsFylkerFeatures
+      description: "Bopliktomr\xE5der"
+      operationId: optionsBopliktomraadeFeatures
       responses:
         '200':
           description: options response
-      summary: Options for Fylke items
+      summary: "Options for Bopliktomr\xE5de items"
       tags:
-      - fylker
+      - bopliktomraade
     post:
-      description: Fylker
-      operationId: getCQL2FylkerFeatures
+      description: "Bopliktomr\xE5der"
+      operationId: getCQL2BopliktomraadeFeatures
       requestBody:
         content:
           application/json:
@@ -428,13 +399,13 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Fylke items with CQL2
+      summary: "Get Bopliktomr\xE5de items with CQL2"
       tags:
-      - fylker
-  /collections/fylker/items/{featureId}:
+      - bopliktomraade
+  /collections/bopliktomraade/items/{featureId}:
     get:
-      description: Fylker
-      operationId: getFylkerFeature
+      description: "Bopliktomr\xE5der"
+      operationId: getBopliktomraadeFeature
       parameters:
       - $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/parameters/featureId
       - $ref: '#/components/parameters/crs'
@@ -449,24 +420,24 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Fylke item by id
+      summary: "Get Bopliktomr\xE5de item by id"
       tags:
-      - fylker
+      - bopliktomraade
     options:
-      description: Fylker
-      operationId: optionsFylkerFeature
+      description: "Bopliktomr\xE5der"
+      operationId: optionsBopliktomraadeFeature
       parameters:
       - $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/parameters/featureId
       responses:
         '200':
           description: options response
-      summary: Options for Fylke item by id
+      summary: "Options for Bopliktomr\xE5de item by id"
       tags:
-      - fylker
-  /collections/fylker/queryables:
+      - bopliktomraade
+  /collections/bopliktomraade/queryables:
     get:
-      description: Fylker
-      operationId: getFylkerQueryables
+      description: "Bopliktomr\xE5der"
+      operationId: getBopliktomraadeQueryables
       parameters:
       - *id001
       - $ref: '#/components/parameters/f'
@@ -491,13 +462,13 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Fylke queryables
+      summary: "Get Bopliktomr\xE5de queryables"
       tags:
-      - fylker
-  /collections/fylker/schema:
+      - bopliktomraade
+  /collections/bopliktomraade/schema:
     get:
-      description: Fylker
-      operationId: getFylkerSchema
+      description: "Bopliktomr\xE5der"
+      operationId: getBopliktomraadeSchema
       parameters:
       - $ref: '#/components/parameters/f'
       - $ref: '#/components/parameters/lang'
@@ -510,9 +481,9 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Fylke schema
+      summary: "Get Bopliktomr\xE5de schema"
       tags:
-      - fylker
+      - bopliktomraade
   /conformance:
     get:
       description: API conformance definition
@@ -628,6 +599,90 @@ paths:
       summary: This document
       tags:
       - server
+  /processes:
+    get:
+      description: Processes
+      operationId: getProcesses
+      parameters:
+      - $ref: '#/components/parameters/f'
+      responses:
+        '200':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ProcessList.yaml
+        default:
+          $ref: '#/components/responses/default'
+      summary: Processes
+      tags:
+      - server
+  /processes/bopliktskjekkgeometri:
+    get:
+      description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
+        \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
+        re i EPSG:25833."
+      operationId: describeBopliktskjekkgeometriProcess
+      parameters:
+      - $ref: '#/components/parameters/f'
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        default:
+          $ref: '#/components/responses/default'
+      summary: Get process metadata
+      tags:
+      - bopliktskjekkgeometri
+  /processes/bopliktskjekkgeometri/execution:
+    post:
+      description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
+        \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
+        re i EPSG:25833."
+      operationId: executeBopliktskjekkgeometriJob
+      parameters:
+      - description: Indicates client preferences, including whether the client is
+          capable of asynchronous processing.
+        in: header
+        name: Prefer
+        required: false
+        schema:
+          enum:
+          - respond-async
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              inputs:
+                geometri:
+                  coordinates:
+                  - - - 68987
+                      - 6627342
+                    - - 69037
+                      - 6627347
+                    - - 69040
+                      - 6627321
+                    - - 68987
+                      - 6627342
+                  type: Polygon
+            schema:
+              $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
+        description: Mandatory execute request JSON
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Process output schema
+        '201':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ExecuteAsync.yaml
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ServerError.yaml
+        default:
+          $ref: '#/components/responses/default'
+      summary: Process Sjekk boplikt for geometri execution
+      tags:
+      - bopliktskjekkgeometri
 servers:
 - description: API for boplikt
   url: http://localhost:5000
@@ -637,8 +692,8 @@ tags:
     description: information
     url: https://example.org
   name: server
-- description: Fylker
-  name: fylker
+- description: "Bopliktomr\xE5der"
+  name: bopliktomraade
 - name: coverages
 - name: edr
 - name: records
