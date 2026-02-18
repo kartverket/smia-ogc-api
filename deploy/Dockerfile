@@ -1,4 +1,4 @@
-FROM geopython/pygeoapi:latest@sha256:0c4a7a5dc457a4bec075f8ad596b7fd08868d7a2f221d7e54c002c0fe9ca2014
+FROM geopython/pygeoapi:latest@sha256:6989da874f5f52a30a98271a959cc68e41ad2570601b20d4faa02ad40c5595de
 
 COPY deploy/requirements.txt /tmp/requirements.txt
 RUN /venv/bin/pip install -r /tmp/requirements.txt
