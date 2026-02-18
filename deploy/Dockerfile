@@ -4,6 +4,7 @@ COPY deploy/requirements.txt /tmp/requirements.txt
 RUN /venv/bin/pip install -r /tmp/requirements.txt
 
 COPY pygeoapi-config.yml /pygeoapi/local.config.yml
+COPY processes/ /pygeoapi/processes/
 COPY deploy/entrypoint.py /pygeoapi/pygeoapi/entrypoint.py
 COPY deploy/gunicorn_conf.py /pygeoapi/gunicorn_conf.py
 
