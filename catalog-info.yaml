@@ -1,0 +1,26 @@
+# nonk8s
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: smia-ogc-api
+  tags:
+    - public
+spec:
+  type: service
+  lifecycle: production
+  owner: smia
+  system: nibas
+  providesApis:
+    - smia-ogc-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: smia-ogc-api
+  tags:
+    - public
+spec:
+  type: openapi
+  lifecycle: production
+  owner: smia
+  definition: $text: pygeoapi-openapi.yml
