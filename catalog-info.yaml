@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: smia-ogc-api
+  tags:
+    - public
+spec:
+  type: service
+  owner: group:default/smia
+  lifecycle: production
+  system: system:default/nibas
