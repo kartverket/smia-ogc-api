@@ -23,4 +23,9 @@ spec:
   type: openapi
   lifecycle: production
   owner: smia
-  definition: $text: pygeoapi-openapi.yml
+  system: nibas
+  definition: |
+    openapi: "3.0.0"
+    info:
+        title: smia-ogc-api API
+    paths:
