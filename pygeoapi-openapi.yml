@@ -207,15 +207,15 @@ info:
     x-ogc-serviceContact:
       addresses: []
       emails:
-      - value: navn@kartverket.no
+      - value: ingrid.synnove.johnsrud@kartverket.no
       hoursOfService: pointOfContact
-      name: Navn Navnesen
-  description: API for boplikt
+      name: Ingrid S Johnsrud
+  description: OGC API for Administrative Inndelinger
   license:
-    name: CC-BY 4.0 license
-    url: https://creativecommons.org/licenses/by/4.0/
-  termsOfService: https://creativecommons.org/licenses/by/4.0/
-  title: Boplikt
+    name: ' '
+    url: ' '
+  termsOfService: ' '
+  title: Administrative Inndelinger
   version: 0.22.0
   x-keywords:
   - boplikt
@@ -684,13 +684,13 @@ paths:
       tags:
       - bopliktskjekkgeometri
 servers:
-- description: API for boplikt
+- description: OGC API for Administrative Inndelinger
   url: http://localhost:5000
 tags:
-- description: API for boplikt
+- description: OGC API for Administrative Inndelinger
   externalDocs:
     description: information
-    url: https://example.org
+    url: https://www.kartverket.no
   name: server
 - description: "Bopliktomr\xE5der"
   name: bopliktomraade

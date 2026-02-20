@@ -3,6 +3,8 @@ server:
         host: 0.0.0.0
         port: 5000
     url: ${PYGEOAPI_URL:-http://localhost:5000}
+    icon: https://www.kartverket.no/favicon.ico
+    logo: https://kartverket.no/globalassets/om-kartverket/kartverkslogo/kv_logo_vertikal_positiv.png
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     gzip: false
@@ -24,22 +26,22 @@ logging:
 
 metadata:
     identification:
-        title: Boplikt
-        description: API for boplikt
+        title: Administrative Inndelinger
+        description: OGC API for Administrative Inndelinger
         keywords:
             - boplikt
         keywords_type: theme
-        terms_of_service: https://creativecommons.org/licenses/by/4.0/
-        url: https://example.org
-    license:
-        name: CC-BY 4.0 license
-        url: https://creativecommons.org/licenses/by/4.0/
+        terms_of_service: " "
+        url: https://www.kartverket.no
     provider:
         name: Kartverket
         url: https://www.kartverket.no
+    license:
+        name: " "
+        url: " "
     contact:
-        name: Navn Navnesen
-        email: navn@kartverket.no
+        name: Ingrid S Johnsrud
+        email: ingrid.synnove.johnsrud@kartverket.no
         role: pointOfContact
 
 resources:
