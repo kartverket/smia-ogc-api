@@ -613,12 +613,12 @@ paths:
       summary: Processes
       tags:
       - server
-  /processes/bopliktskjekkgeometri:
+  /processes/bopliktskjekk-geometri:
     get:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
         \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
         re i EPSG:25833."
-      operationId: describeBopliktskjekkgeometriProcess
+      operationId: describeBopliktskjekk-geometriProcess
       parameters:
       - $ref: '#/components/parameters/f'
       responses:
@@ -628,13 +628,13 @@ paths:
           $ref: '#/components/responses/default'
       summary: Get process metadata
       tags:
-      - bopliktskjekkgeometri
-  /processes/bopliktskjekkgeometri/execution:
+      - bopliktskjekk-geometri
+  /processes/bopliktskjekk-geometri/execution:
     post:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
         \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
         re i EPSG:25833."
-      operationId: executeBopliktskjekkgeometriJob
+      operationId: executeBopliktskjekk-geometriJob
       parameters:
       - description: Indicates client preferences, including whether the client is
           capable of asynchronous processing.
@@ -682,7 +682,7 @@ paths:
           $ref: '#/components/responses/default'
       summary: Process Sjekk boplikt for geometri execution
       tags:
-      - bopliktskjekkgeometri
+      - bopliktskjekk-geometri
 servers:
 - description: OGC API for Administrative Inndelinger
   url: http://localhost:5000
