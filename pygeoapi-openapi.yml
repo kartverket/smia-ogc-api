@@ -207,15 +207,15 @@ info:
     x-ogc-serviceContact:
       addresses: []
       emails:
-      - value: navn@kartverket.no
+      - value: ingrid.synnove.johnsrud@kartverket.no
       hoursOfService: pointOfContact
-      name: Navn Navnesen
-  description: API for boplikt
+      name: Ingrid S Johnsrud
+  description: OGC API for Administrative Inndelinger
   license:
-    name: CC-BY 4.0 license
-    url: https://creativecommons.org/licenses/by/4.0/
-  termsOfService: https://creativecommons.org/licenses/by/4.0/
-  title: Boplikt
+    name: ' '
+    url: ' '
+  termsOfService: ' '
+  title: Administrative Inndelinger
   version: 0.22.0
   x-keywords:
   - boplikt
@@ -613,12 +613,12 @@ paths:
       summary: Processes
       tags:
       - server
-  /processes/bopliktskjekkgeometri:
+  /processes/bopliktskjekk-geometri:
     get:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
         \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
         re i EPSG:25833."
-      operationId: describeBopliktskjekkgeometriProcess
+      operationId: describeBopliktskjekk-geometriProcess
       parameters:
       - $ref: '#/components/parameters/f'
       responses:
@@ -628,13 +628,13 @@ paths:
           $ref: '#/components/responses/default'
       summary: Get process metadata
       tags:
-      - bopliktskjekkgeometri
-  /processes/bopliktskjekkgeometri/execution:
+      - bopliktskjekk-geometri
+  /processes/bopliktskjekk-geometri/execution:
     post:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
         \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
         re i EPSG:25833."
-      operationId: executeBopliktskjekkgeometriJob
+      operationId: executeBopliktskjekk-geometriJob
       parameters:
       - description: Indicates client preferences, including whether the client is
           capable of asynchronous processing.
@@ -682,15 +682,15 @@ paths:
           $ref: '#/components/responses/default'
       summary: Process Sjekk boplikt for geometri execution
       tags:
-      - bopliktskjekkgeometri
+      - bopliktskjekk-geometri
 servers:
-- description: API for boplikt
+- description: OGC API for Administrative Inndelinger
   url: http://localhost:5000
 tags:
-- description: API for boplikt
+- description: OGC API for Administrative Inndelinger
   externalDocs:
     description: information
-    url: https://example.org
+    url: https://www.kartverket.no
   name: server
 - description: "Bopliktomr\xE5der"
   name: bopliktomraade
