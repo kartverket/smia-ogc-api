@@ -21,8 +21,9 @@ server:
     admin: false
 
 logging:
-    level: ERROR
-    #logfile: /tmp/pygeoapi.log
+    level: INFO
+    logformat: '[%(asctime)s.%(msecs)03d] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s'
+    dateformat: '%Y-%m-%dT%H:%M:%S'
 
 metadata:
     identification:
