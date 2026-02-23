@@ -15,6 +15,7 @@ ENV WSGI_APP=pygeoapi.entrypoint:app
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp
 ENV PYGEOAPI_OPENAPI=/tmp/local.openapi.yml
 ENV CONTAINER_PORT=5000
+ENV GUNICORN_CMD_ARGS="--config /pygeoapi/gunicorn_conf.py"
 
 USER 150:150
 
