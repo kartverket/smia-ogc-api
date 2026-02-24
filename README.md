@@ -37,3 +37,10 @@ All konfigurasjon ligger i `pygeoapi-config.yml`. Her defineres:
 - Koordinatsystem (EPSG:25833 / UTM33)
 
 Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
+
+
+## Monitorering
+
+Det finnes et dashboard i Grafana for dette APIet. Gå til [Smia: Matrikkeltjenester](https://monitoring.kartverket.cloud/d/ad6ed173-cb04-48ee-add2-6b3d5538fdec/smia3a-matrikkeltjenester?orgId=1&from=now-1h&to=now&timezone=browser&var-prometheus=P3C08CCCD0A204B5D&var-tjeneste=smia-ogc-api&var-loki=PC49BB3D5AB252A94&var-loglevel=INFO&var-loglevel=WARN&var-loglevel=ERROR&var-namespace=smia-tjenester-main) i Grafana, og velg smia-ogc-api under "tjeneste". Husk å justere om du skal se prod eller dev aktivitet. 
+
+Det finnes også er dashboard for databasene denne applikasjonen bruker i de forskjellige miljøene. Gå til [denne lenken](https://rin-ap1450.statkart.no/d/kommuneinfoapi_pg_details/postgresql-details?orgId=1) for å se dashboardet. Logg in med Microsoft-bruker. 
