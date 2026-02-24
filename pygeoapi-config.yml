@@ -28,7 +28,7 @@ logging:
 metadata:
     identification:
         title: Administrative Inndelinger
-        description: OGC API for Administrative Inndelinger
+        description: "OGC API for Administrative Inndelinger. NB: APIet er under testing og kan endres på kort varsel. Dataendepunkter krever autentisering med API-nøkkel i X-API-Key-header, f.eks: curl -H 'X-API-Key: din-nøkkel'. Tilbakemeldinger mottas gjerne på e-post til kontaktperson."
         keywords:
             - boplikt
         keywords_type: theme
