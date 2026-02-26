@@ -77,3 +77,8 @@ resources:
         type: process
         processor:
             name: processes.boplikt.BopliktsjekkGeometriProcessor
+
+    bopliktsjekk-matrikkelenhetsnummer:
+        type: process
+        processor:
+            name: processes.boplikt_matrikkelenhetsnummer.BopliktsjekkMatrikkelenhetsnummerProcessor

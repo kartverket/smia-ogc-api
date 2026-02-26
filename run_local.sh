@@ -1,4 +1,5 @@
 #!/bin/bash
+unset VIRTUAL_ENV
 export PYGEOAPI_CONFIG=pygeoapi-config.yml
 export PYGEOAPI_OPENAPI=pygeoapi-openapi.yml
 export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}$(dirname "$0")"

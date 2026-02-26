@@ -210,7 +210,10 @@ info:
       - value: ingrid.synnove.johnsrud@kartverket.no
       hoursOfService: pointOfContact
       name: Ingrid S Johnsrud
-  description: OGC API for Administrative Inndelinger
+  description: "OGC API for Administrative Inndelinger. NB: APIet er under testing\
+    \ og kan endres p\xE5 kort varsel. Dataendepunkter krever autentisering med API-n\xF8\
+    kkel i X-API-Key-header, f.eks: curl -H 'X-API-Key: din-n\xF8kkel'. Tilbakemeldinger\
+    \ mottas gjerne p\xE5 e-post til kontaktperson."
   license:
     name: ' '
     url: ' '
@@ -312,6 +315,11 @@ paths:
             - forskriftsreferanse
             - informasjon
             - opphav
+            - bebygd_eiendom
+            - helaarsbolig
+            - ubebygd_tomt
+            - slektskapsunntak
+            - andre_avgrensninger
             type: string
           type: array
         style: form
@@ -357,6 +365,41 @@ paths:
       - explode: false
         in: query
         name: opphav
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: false
+        in: query
+        name: bebygd_eiendom
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: false
+        in: query
+        name: helaarsbolig
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: false
+        in: query
+        name: ubebygd_tomt
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: false
+        in: query
+        name: slektskapsunntak
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: false
+        in: query
+        name: andre_avgrensninger
         required: false
         schema:
           type: string
@@ -613,6 +656,66 @@ paths:
       summary: Processes
       tags:
       - server
+  /processes/bopliktsjekk-matrikkelenhetsnummer:
+    get:
+      description: "Henter teiggeometri fra Matrikkel og sjekker om eiendommen er\
+        \ innenfor, delvis innenfor, eller utenfor bopliktomr\xE5der."
+      operationId: describeBopliktsjekk-matrikkelenhetsnummerProcess
+      parameters:
+      - $ref: '#/components/parameters/f'
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        default:
+          $ref: '#/components/responses/default'
+      summary: Get process metadata
+      tags:
+      - bopliktsjekk-matrikkelenhetsnummer
+  /processes/bopliktsjekk-matrikkelenhetsnummer/execution:
+    post:
+      description: "Henter teiggeometri fra Matrikkel og sjekker om eiendommen er\
+        \ innenfor, delvis innenfor, eller utenfor bopliktomr\xE5der."
+      operationId: executeBopliktsjekk-matrikkelenhetsnummerJob
+      parameters:
+      - description: Indicates client preferences, including whether the client is
+          capable of asynchronous processing.
+        in: header
+        name: Prefer
+        required: false
+        schema:
+          enum:
+          - respond-async
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              inputs:
+                bruksnummer: 21
+                gaardsnummer: 306
+                kommunenummer: '4203'
+            schema:
+              $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
+        description: Mandatory execute request JSON
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Process output schema
+        '201':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ExecuteAsync.yaml
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ServerError.yaml
+        default:
+          $ref: '#/components/responses/default'
+      summary: Process Bopliktsjekk via matrikkelnummer execution
+      tags:
+      - bopliktsjekk-matrikkelenhetsnummer
   /processes/bopliktskjekk-geometri:
     get:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
@@ -684,10 +787,16 @@ paths:
       tags:
       - bopliktskjekk-geometri
 servers:
-- description: OGC API for Administrative Inndelinger
+- description: "OGC API for Administrative Inndelinger. NB: APIet er under testing\
+    \ og kan endres p\xE5 kort varsel. Dataendepunkter krever autentisering med API-n\xF8\
+    kkel i X-API-Key-header, f.eks: curl -H 'X-API-Key: din-n\xF8kkel'. Tilbakemeldinger\
+    \ mottas gjerne p\xE5 e-post til kontaktperson."
   url: http://localhost:5000
 tags:
-- description: OGC API for Administrative Inndelinger
+- description: "OGC API for Administrative Inndelinger. NB: APIet er under testing\
+    \ og kan endres p\xE5 kort varsel. Dataendepunkter krever autentisering med API-n\xF8\
+    kkel i X-API-Key-header, f.eks: curl -H 'X-API-Key: din-n\xF8kkel'. Tilbakemeldinger\
+    \ mottas gjerne p\xE5 e-post til kontaktperson."
   externalDocs:
     description: information
     url: https://www.kartverket.no

@@ -1,20 +1,12 @@
-import json
-import logging
-import os
+"""Prosessor for bopliktsjekk basert på innsendt GeoJSON-geometri."""
 
-import psycopg2
+import logging
+
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-LOGGER = logging.getLogger(__name__)
+from processes.boplikt_check import sjekk_boplikt
 
-RESPONSE_COLUMNS = [
-    "kommunenummer",
-    "fylkesnummer",
-    "delvis_boplikt",
-    "forskriftsreferanse",
-    "informasjon",
-    "opphav",
-]
+LOGGER = logging.getLogger(__name__)
 
 PROCESS_METADATA = {
     "version": "0.1.0",
@@ -66,21 +58,14 @@ PROCESS_METADATA = {
 }
 
 
-def _get_connection():
-    return psycopg2.connect(
-        host=os.environ.get("DB_HOST", "localhost"),
-        port=os.environ.get("DB_PORT", "5432"),
-        dbname=os.environ.get("DB_NAME", "postgres"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-    )
-
-
 class BopliktsjekkGeometriProcessor(BaseProcessor):
+    """Prosessor som sjekker om en geometri er innenfor bopliktområder."""
+
     def __init__(self, processor_def):
         super().__init__(processor_def, PROCESS_METADATA)
 
     def execute(self, data, outputs=None):
+        """Valider innsendt geometri og kjør bopliktsjekk mot databasen."""
         geojson_geom = data.get("geometri")
         if geojson_geom is None:
             raise ProcessorExecuteError("Mangler input: geometri")
@@ -92,49 +77,5 @@ class BopliktsjekkGeometriProcessor(BaseProcessor):
                 "Må være Point, Polygon eller MultiPolygon."
             )
 
-        geojson_str = json.dumps(geojson_geom)
-        cols = ", ".join(RESPONSE_COLUMNS)
-
-        sql = f"""
-            SELECT {cols},
-                   ST_Within(
-                       ST_SetSRID(ST_GeomFromGeoJSON(%s), 25833),
-                       omrade
-                   ) AS is_within
-            FROM kommuneinfo.bopliktomraade
-            WHERE ST_Intersects(
-                ST_SetSRID(ST_GeomFromGeoJSON(%s), 25833),
-                omrade
-            )
-        """
-
-        try:
-            conn = _get_connection()
-            with conn:
-                with conn.cursor() as cur:
-                    cur.execute(sql, (geojson_str, geojson_str))
-                    rows = cur.fetchall()
-            conn.close()
-        except Exception as e:
-            LOGGER.error("Database error: %s", e)
-            raise ProcessorExecuteError(f"Databasefeil: {e}")
-
-        treff = []
-        for row in rows:
-            props = dict(zip(RESPONSE_COLUMNS, row[:-1]))
-            props["relasjon"] = "INNENFOR" if row[-1] else "DELVIS_OVERLAPP"
-            treff.append(props)
-
-        if not treff:
-            status = "UTENFOR"
-        elif all(t["relasjon"] == "INNENFOR" for t in treff):
-            status = "INNENFOR"
-        else:
-            status = "DELVIS_OVERLAPP"
-
-        result = {
-            "status": status,
-            "treff": treff,
-        }
-
+        result = sjekk_boplikt(geojson_geom)
         return "application/json", result
