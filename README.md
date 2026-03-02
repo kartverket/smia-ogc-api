@@ -38,6 +38,16 @@ All konfigurasjon ligger i `pygeoapi-config.yml`. Her defineres:
 
 Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 
+## Linting og formatering
+
+Prosjektet bruker [Ruff](https://docs.astral.sh/ruff/) for linting og formatering.
+
+```bash
+uv run ruff check     # lint
+uv run ruff format    # formater
+```
+
+For VS Code-brukere finnes det ferdig oppsett i `.vscode/settings.json` som formaterer og fikser imports ved lagring. Bruker du en annen editor, se [Ruff editor-integrasjoner](https://docs.astral.sh/ruff/editors/).
 
 ## Monitorering
 
