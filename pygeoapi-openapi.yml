@@ -656,11 +656,11 @@ paths:
       summary: Processes
       tags:
       - server
-  /processes/bopliktsjekk-matrikkelenhetsnummer:
+  /processes/bopliktsjekk:
     get:
-      description: "Henter teiggeometri fra Matrikkel og sjekker om eiendommen er\
-        \ innenfor, delvis innenfor, eller utenfor bopliktomr\xE5der."
-      operationId: describeBopliktsjekk-matrikkelenhetsnummerProcess
+      description: "Henter teiggeometri til en Matrikkelenhet og sjekker om eiendommen\
+        \ er innenfor, delvis innenfor, eller utenfor bopliktomr\xE5der."
+      operationId: describeBopliktsjekkProcess
       parameters:
       - $ref: '#/components/parameters/f'
       responses:
@@ -670,58 +670,13 @@ paths:
           $ref: '#/components/responses/default'
       summary: Get process metadata
       tags:
-      - bopliktsjekk-matrikkelenhetsnummer
-  /processes/bopliktsjekk-matrikkelenhetsnummer/execution:
-    post:
-      description: "Henter teiggeometri fra Matrikkel og sjekker om eiendommen er\
-        \ innenfor, delvis innenfor, eller utenfor bopliktomr\xE5der."
-      operationId: executeBopliktsjekk-matrikkelenhetsnummerJob
-      parameters:
-      - description: Indicates client preferences, including whether the client is
-          capable of asynchronous processing.
-        in: header
-        name: Prefer
-        required: false
-        schema:
-          enum:
-          - respond-async
-          type: string
-      requestBody:
-        content:
-          application/json:
-            example:
-              inputs:
-                bruksnummer: 21
-                gaardsnummer: 306
-                kommunenummer: '4203'
-            schema:
-              $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
-        description: Mandatory execute request JSON
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-          description: Process output schema
-        '201':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ExecuteAsync.yaml
-        '404':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
-        '500':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ServerError.yaml
-        default:
-          $ref: '#/components/responses/default'
-      summary: Process Bopliktsjekk via matrikkelnummer execution
-      tags:
-      - bopliktsjekk-matrikkelenhetsnummer
-  /processes/bopliktskjekk-geometri:
+      - bopliktsjekk
+  /processes/bopliktsjekk-geometri:
     get:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
         \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
         re i EPSG:25833."
-      operationId: describeBopliktskjekk-geometriProcess
+      operationId: describeBopliktsjekk-geometriProcess
       parameters:
       - $ref: '#/components/parameters/f'
       responses:
@@ -731,13 +686,13 @@ paths:
           $ref: '#/components/responses/default'
       summary: Get process metadata
       tags:
-      - bopliktskjekk-geometri
-  /processes/bopliktskjekk-geometri/execution:
+      - bopliktsjekk-geometri
+  /processes/bopliktsjekk-geometri/execution:
     post:
       description: "Sjekker om en geometri (Point, Polygon, MultiPolygon) er innenfor,\
         \ delvis innenfor, eller utenfor bopliktomr\xE5der. Koordinater m\xE5 v\xE6\
         re i EPSG:25833."
-      operationId: executeBopliktskjekk-geometriJob
+      operationId: executeBopliktsjekk-geometriJob
       parameters:
       - description: Indicates client preferences, including whether the client is
           capable of asynchronous processing.
@@ -783,9 +738,54 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ServerError.yaml
         default:
           $ref: '#/components/responses/default'
-      summary: Process Sjekk boplikt for geometri execution
+      summary: Process Bopliktsjekk for geometri execution
       tags:
-      - bopliktskjekk-geometri
+      - bopliktsjekk-geometri
+  /processes/bopliktsjekk/execution:
+    post:
+      description: "Henter teiggeometri til en Matrikkelenhet og sjekker om eiendommen\
+        \ er innenfor, delvis innenfor, eller utenfor bopliktomr\xE5der."
+      operationId: executeBopliktsjekkJob
+      parameters:
+      - description: Indicates client preferences, including whether the client is
+          capable of asynchronous processing.
+        in: header
+        name: Prefer
+        required: false
+        schema:
+          enum:
+          - respond-async
+          type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              inputs:
+                bruksnummer: 21
+                gardsnummer: 306
+                kommunenummer: '4203'
+            schema:
+              $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
+        description: Mandatory execute request JSON
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Process output schema
+        '201':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ExecuteAsync.yaml
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ServerError.yaml
+        default:
+          $ref: '#/components/responses/default'
+      summary: Process Bopliktsjekk execution
+      tags:
+      - bopliktsjekk
 servers:
 - description: "OGC API for Administrative Inndelinger. NB: APIet er under testing\
     \ og kan endres p\xE5 kort varsel. Dataendepunkter krever autentisering med API-n\xF8\

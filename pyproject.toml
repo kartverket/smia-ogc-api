@@ -12,5 +12,24 @@ dependencies = [
     "prometheus-flask-exporter>=0.23.2",
     "psycopg2-binary>=2.9.11",
     "pygeoapi>=0.22.0",
+    "shapely>=2.0",
     "zeep>=4.3.2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.4",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+extend-select = [
+    "I",
+    "UP",
+    "B",
+]
+ignore = [
+    "B905",
 ]
