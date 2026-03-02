@@ -9,7 +9,7 @@ from pygeoapi.process.base import ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
 
-RESPONSE_COLUMNS = [
+_RESPONSE_COLUMNS = [
     "kommunenummer",
     "fylkesnummer",
     "delvis_boplikt",
@@ -22,34 +22,50 @@ RESPONSE_COLUMNS = [
     "andre_avgrensninger",
 ]
 
-_pool = None
+_db_pool = None
 
 
 def _get_pool():
-    global _pool
-    if _pool is None:
-        _pool = SimpleConnectionPool(
+    """Hent eller opprett en global PostgreSQL connection pool.
+
+    Returnerer:
+        SimpleConnectionPool: En tilkoblings-pool for PostgreSQL-database.
+    """
+    global _db_pool
+    if _db_pool is None:
+        _db_pool = SimpleConnectionPool(
             minconn=1,
-            maxconn=5,
+            maxconn=2,
             host=os.environ.get("DB_HOST", "localhost"),
             port=os.environ.get("DB_PORT", "5432"),
             dbname=os.environ.get("DB_NAME", "postgres"),
-            user=os.environ.get("DB_USER"),
-            password=os.environ.get("DB_PASSWORD"),
+            user=os.environ.get("DB_USER", "postgres"),
+            password=os.environ.get("DB_PASSWORD", "postgres"),
         )
-    return _pool
+    return _db_pool
 
 
 def sjekk_kommune_boplikt(kommunenummer):
-    """Sjekk om en kommune har boplikt, uten geometrioppslag.
+    """Finn om en kommune har boplikt.
 
-    Returnerer liste med treff fra bopliktomraade-tabellen (tom liste = ingen boplikt).
+    Args:
+        kommunenummer (str): Kommunenummer (4 siffer).
+
+    Returns:
+        list[dict]: Treff fra bopliktomraade-tabellen. Mulige utfall:
+            - Tom liste: kommunen har ingen boplikt.
+            - Én dict med delvis_boplikt=False: full boplikt for hele kommunen.
+            - Én dict med delvis_boplikt=True: delvis boplikt, krever geometrisjekk.
+            En kommune vil aldri ha både True og False — det garanteres av datagrunnlaget.
+
+    Raises:
+        ProcessorExecuteError: Ved databasefeil.
     """
-    cols = ", ".join(RESPONSE_COLUMNS)
+    cols = ", ".join(_RESPONSE_COLUMNS)
     sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
 
-    pool = _get_pool()
-    conn = pool.getconn()
+    db_pool = _get_pool()
+    conn = db_pool.getconn()
     try:
         with conn:
             with conn.cursor() as cur:
@@ -57,11 +73,11 @@ def sjekk_kommune_boplikt(kommunenummer):
                 rows = cur.fetchall()
     except Exception as e:
         LOGGER.error("Database error: %s", e)
-        raise ProcessorExecuteError(f"Databasefeil: {e}")
+        raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from e
     finally:
-        pool.putconn(conn)
+        db_pool.putconn(conn)
 
-    return [dict(zip(RESPONSE_COLUMNS, row)) for row in rows]
+    return [dict(zip(_RESPONSE_COLUMNS, row)) for row in rows]
 
 
 def sjekk_boplikt(geojson_geom, kommunenummer=None):
@@ -72,7 +88,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     og 'treff'.
     """
     geojson_str = json.dumps(geojson_geom)
-    cols = ", ".join(RESPONSE_COLUMNS)
+    cols = ", ".join(_RESPONSE_COLUMNS)
 
     sql = f"""
         WITH input AS (
@@ -89,8 +105,8 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         sql += " AND kommunenummer = %s"
         params.append(kommunenummer)
 
-    pool = _get_pool()
-    conn = pool.getconn()
+    db_pool = _get_pool()
+    conn = db_pool.getconn()
     try:
         with conn:
             with conn.cursor() as cur:
@@ -98,13 +114,13 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
                 rows = cur.fetchall()
     except Exception as e:
         LOGGER.error("Database error: %s", e)
-        raise ProcessorExecuteError(f"Databasefeil: {e}")
+        raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from e
     finally:
-        pool.putconn(conn)
+        db_pool.putconn(conn)
 
     treff = []
     for row in rows:
-        props = dict(zip(RESPONSE_COLUMNS, row[:-1]))
+        props = dict(zip(_RESPONSE_COLUMNS, row[:-1]))
         props["relasjon"] = "INNENFOR" if row[-1] else "DELVIS_OVERLAPP"
         treff.append(props)
 

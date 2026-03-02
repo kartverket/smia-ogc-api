@@ -1,5 +1,5 @@
 """
-Prosessor for bopliktsjekk via matrikkelnummer.
+Prosessor for bopliktsjekk med matrikkelnummer som input.
 
 Fremgangsmåte:
   1. Sjekker først om kommunen til matrikkelenheten har boplikt.
@@ -9,10 +9,10 @@ Fremgangsmåte:
 
 Parametre:
     - kommunenummer (str): Kommunenummer (4 siffer, f.eks. '3024')
-    - gaardsnummer (int): Gårdsnummer (gnr)
-    - bruksnummer (int): Bruksnummer (bnr)
-    - festenummer (int, valgfri): Festenummer (fnr), 0 hvis ingen
-    - seksjonsnummer (int, valgfri): Seksjonsnummer (snr), 0 hvis ingen
+    - gardsnummer (int): Gårdsnummer
+    - bruksnummer (int): Bruksnummer
+    - festenummer (int, valgfri): Festenummer, 0 hvis ingen
+    - seksjonsnummer (int, valgfri): Seksjonsnummer, 0 hvis ingen
 
 Returnerer:
     - dict: Status og treff mot bopliktområder
@@ -22,20 +22,21 @@ import logging
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-from processes.matrikkel_client import get_matrikkel_client, hent_teiggeometri
-from processes.boplikt_check import sjekk_boplikt, sjekk_kommune_boplikt
+from processes.utils.boplikt_db import sjekk_boplikt, sjekk_kommune_boplikt
+from processes.utils.matrikkel_client import get_matrikkel_client
+from processes.utils.matrikkel_geometry import hent_teiggeometri
 
 LOGGER = logging.getLogger(__name__)
 
 PROCESS_METADATA = {
     "version": "0.1.0",
-    "title": {"nb": "Bopliktsjekk via matrikkelnummer"},
+    "title": {"nb": "Bopliktsjekk"},
     "description": {
-        "nb": "Henter teiggeometri fra Matrikkel og sjekker om eiendommen "
+        "nb": "Henter teiggeometri til en Matrikkelenhet og sjekker om eiendommen "
         "er innenfor, delvis innenfor, eller utenfor bopliktområder."
     },
     "jobControlOptions": ["sync-execute"],
-    "keywords": ["boplikt", "matrikkel", "spatial"],
+    "keywords": ["boplikt", "matrikkel"],
     "inputs": {
         "kommunenummer": {
             "title": "Kommunenummer",
@@ -44,30 +45,30 @@ PROCESS_METADATA = {
             "minOccurs": 1,
             "maxOccurs": 1,
         },
-        "gaardsnummer": {
+        "gardsnummer": {
             "title": "Gårdsnummer",
-            "description": "Gårdsnummer (gnr)",
+            "description": "Gårdsnummer",
             "schema": {"type": "integer"},
             "minOccurs": 1,
             "maxOccurs": 1,
         },
         "bruksnummer": {
             "title": "Bruksnummer",
-            "description": "Bruksnummer (bnr)",
+            "description": "Bruksnummer",
             "schema": {"type": "integer"},
             "minOccurs": 1,
             "maxOccurs": 1,
         },
         "festenummer": {
             "title": "Festenummer",
-            "description": "Festenummer (fnr), 0 hvis ingen",
+            "description": "Festenummer, 0 hvis ingen",
             "schema": {"type": "integer"},
             "minOccurs": 0,
             "maxOccurs": 1,
         },
         "seksjonsnummer": {
             "title": "Seksjonsnummer",
-            "description": "Seksjonsnummer (snr), 0 hvis ingen",
+            "description": "Seksjonsnummer, 0 hvis ingen",
             "schema": {"type": "integer"},
             "minOccurs": 0,
             "maxOccurs": 1,
@@ -86,15 +87,14 @@ PROCESS_METADATA = {
     "example": {
         "inputs": {
             "kommunenummer": "4203",
-            "gaardsnummer": 306,
+            "gardsnummer": 306,
             "bruksnummer": 21,
         }
     },
 }
 
 
-
-class BopliktsjekkMatrikkelenhetsnummerProcessor(BaseProcessor):
+class BopliktSjekkProcessor(BaseProcessor):
     """Sjekker boplikt for matrikkelenhet.
 
     1. Sjekker om kommunen har boplikt (full eller delvis).
@@ -107,32 +107,37 @@ class BopliktsjekkMatrikkelenhetsnummerProcessor(BaseProcessor):
 
     def execute(self, data, outputs=None):
         kommunenummer = data.get("kommunenummer")
-        gardsnummer = data.get("gaardsnummer")
+        gardsnummer = data.get("gardsnummer")
         bruksnummer = data.get("bruksnummer")
         festenummer = data.get("festenummer", 0)
         seksjonsnummer = data.get("seksjonsnummer", 0)
 
         if not kommunenummer or gardsnummer is None or bruksnummer is None:
             raise ProcessorExecuteError(
-                "Mangler påkrevde felt: kommunenummer, gaardsnummer, bruksnummer"
+                "Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
             )
 
-        # Først sjekk om kommunen har boplikt og om det er delvis boplikt
-        kommune_treff = sjekk_kommune_boplikt(kommunenummer)
+        kommune_med_boplikt = sjekk_kommune_boplikt(kommunenummer)
 
-        if not kommune_treff:
+        if not kommune_med_boplikt:
             return "application/json", {"status": "UTENFOR", "treff": []}
 
-        if all(not t["delvis_boplikt"] for t in kommune_treff):
+        if all(not kommune["delvis_boplikt"] for kommune in kommune_med_boplikt):
             return "application/json", {
                 "status": "INNENFOR",
-                "treff": [{**t, "relasjon": "INNENFOR"} for t in kommune_treff],
+                "treff": [
+                    {**kommune, "relasjon": "INNENFOR"}
+                    for kommune in kommune_med_boplikt
+                ],
             }
 
-        # Delvis boplikt — må hente geometri og gjøre romlig sjekk
-        geom, hjelpelinjetyper = hent_teiggeometri(
-            get_matrikkel_client(), kommunenummer, gardsnummer, bruksnummer,
-            festenummer, seksjonsnummer,
+        geom, hjelpelinjetyper, geom_validering, har_bue = hent_teiggeometri(
+            get_matrikkel_client(),
+            kommunenummer,
+            gardsnummer,
+            bruksnummer,
+            festenummer,
+            seksjonsnummer,
         )
 
         if geom is None:
@@ -142,5 +147,10 @@ class BopliktsjekkMatrikkelenhetsnummerProcessor(BaseProcessor):
             )
 
         result = sjekk_boplikt(geom, kommunenummer)
-        result["teig"] = {"hjelpelinjetyper": hjelpelinjetyper}
+        result["teig"] = {
+            "geometri": geom,
+            "geometri_gyldig": geom_validering,
+            "hjelpelinjetyper": hjelpelinjetyper,
+            "har_bue": har_bue,
+        }
         return "application/json", result

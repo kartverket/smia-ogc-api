@@ -4,13 +4,13 @@ import logging
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-from processes.boplikt_check import sjekk_boplikt
+from processes.utils.boplikt_db import sjekk_boplikt
 
 LOGGER = logging.getLogger(__name__)
 
 PROCESS_METADATA = {
     "version": "0.1.0",
-    "title": {"nb": "Sjekk boplikt for geometri"},
+    "title": {"nb": "Bopliktsjekk for geometri"},
     "description": {
         "nb": "Sjekker om en geometri (Point, Polygon, MultiPolygon) "
         "er innenfor, delvis innenfor, eller utenfor bopliktområder. "
@@ -58,7 +58,7 @@ PROCESS_METADATA = {
 }
 
 
-class BopliktsjekkGeometriProcessor(BaseProcessor):
+class BopliktSjekkGeometriProcessor(BaseProcessor):
     """Prosessor som sjekker om en geometri er innenfor bopliktområder."""
 
     def __init__(self, processor_def):
