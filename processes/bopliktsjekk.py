@@ -148,9 +148,9 @@ class BopliktSjekkProcessor(BaseProcessor):
 
         result = sjekk_boplikt(geom, kommunenummer)
         result["teig"] = {
-            "geometri": geom,
-            "geometri_gyldig": geom_validering,
+            # "geometri": geom,
+            # "geometri_gyldig": geom_validering,
             "hjelpelinjetyper": hjelpelinjetyper,
-            "har_bue": har_bue,
+            # "har_bue": har_bue,
         }
         return "application/json", result
