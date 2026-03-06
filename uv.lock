@@ -56,6 +56,7 @@ dependencies = [
     { name = "geoalchemy2" },
     { name = "gevent" },
     { name = "gunicorn" },
+    { name = "json-log-formatter" },
     { name = "prometheus-flask-exporter" },
     { name = "psycopg2-binary" },
     { name = "pygeoapi" },
@@ -74,6 +75,7 @@ requires-dist = [
     { name = "geoalchemy2", specifier = ">=0.18.1" },
     { name = "gevent", specifier = ">=25.9.1" },
     { name = "gunicorn", specifier = ">=25.0.3" },
+    { name = "json-log-formatter", specifier = ">=1.1.1" },
     { name = "prometheus-flask-exporter", specifier = ">=0.23.2" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "pygeoapi", specifier = ">=0.22.0" },
@@ -404,6 +406,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899, upload-time = "2025-03-05T20:05:00.369Z" },
 ]
+
+[[package]]
+name = "json-log-formatter"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/ef/324f4a28ed0152a32b80685b26316b604218e4ac77487ea82719c3c28bc6/json_log_formatter-1.1.1.tar.gz", hash = "sha256:0815e3b4469e5c79cf3f6dc8a0613ba6601f4a7464f85ba03655cfa6e3e17d10", size = 5896, upload-time = "2025-02-27T22:56:15.643Z" }
 
 [[package]]
 name = "jsonschema"
