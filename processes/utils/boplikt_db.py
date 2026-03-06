@@ -12,6 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 _RESPONSE_COLUMNS = [
     "kommunenummer",
+    "kommunenavn",
     "fylkesnummer",
     "delvis_boplikt",
     "forskriftsreferanse",
