@@ -310,6 +310,7 @@ paths:
           items:
             enum:
             - kommunenummer
+            - kommunenavn
             - fylkesnummer
             - delvis_boplikt
             - forskriftsreferanse
@@ -333,6 +334,13 @@ paths:
         required: false
         schema:
           type: string
+        style: form
+      - explode: false
+        in: query
+        name: kommunenavn
+        required: false
+        schema:
+          type: object
         style: form
       - explode: false
         in: query

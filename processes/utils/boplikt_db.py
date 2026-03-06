@@ -4,7 +4,8 @@ import json
 import logging
 import os
 
-from psycopg2.pool import SimpleConnectionPool
+from psycopg2 import InterfaceError, OperationalError
+from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
@@ -26,14 +27,9 @@ _db_pool = None
 
 
 def _get_pool():
-    """Hent eller opprett en global PostgreSQL connection pool.
-
-    Returnerer:
-        SimpleConnectionPool: En tilkoblings-pool for PostgreSQL-database.
-    """
     global _db_pool
     if _db_pool is None:
-        _db_pool = SimpleConnectionPool(
+        _db_pool = ThreadedConnectionPool(
             minconn=1,
             maxconn=2,
             host=os.environ.get("DB_HOST", "localhost"),
@@ -43,6 +39,31 @@ def _get_pool():
             password=os.environ.get("DB_PASSWORD", "postgres"),
         )
     return _db_pool
+
+
+def _execute_query(sql, params):
+    db_pool = _get_pool()
+    last_err = None
+
+    for attempt in range(2):
+        conn = db_pool.getconn()
+        try:
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(sql, params)
+                    return cur.fetchall()
+        except (OperationalError, InterfaceError) as e:
+            last_err = e
+            LOGGER.warning(
+                "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
+            )
+        except Exception as e:
+            LOGGER.error("Databasefeil: %s", e)
+            raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from e
+        finally:
+            db_pool.putconn(conn, close=bool(conn.closed))
+
+    raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from last_err
 
 
 def sjekk_kommune_boplikt(kommunenummer):
@@ -63,20 +84,7 @@ def sjekk_kommune_boplikt(kommunenummer):
     """
     cols = ", ".join(_RESPONSE_COLUMNS)
     sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
-
-    db_pool = _get_pool()
-    conn = db_pool.getconn()
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute(sql, (kommunenummer,))
-                rows = cur.fetchall()
-    except Exception as e:
-        LOGGER.error("Database error: %s", e)
-        raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from e
-    finally:
-        db_pool.putconn(conn)
-
+    rows = _execute_query(sql, (kommunenummer,))
     return [dict(zip(_RESPONSE_COLUMNS, row)) for row in rows]
 
 
@@ -105,18 +113,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         sql += " AND kommunenummer = %s"
         params.append(kommunenummer)
 
-    db_pool = _get_pool()
-    conn = db_pool.getconn()
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute(sql, params)
-                rows = cur.fetchall()
-    except Exception as e:
-        LOGGER.error("Database error: %s", e)
-        raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from e
-    finally:
-        db_pool.putconn(conn)
+    rows = _execute_query(sql, params)
 
     treff = []
     for row in rows:
