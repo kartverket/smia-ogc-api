@@ -117,12 +117,17 @@ class BopliktSjekkProcessor(BaseProcessor):
                 "Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
             )
 
+        mnr = f"{kommunenummer}-{gardsnummer}/{bruksnummer}/{festenummer}/{seksjonsnummer}"
+        LOGGER.info("Bopliktsjekk startet for matrikkelenhet %s", mnr)
+
         kommune_med_boplikt = sjekk_kommune_boplikt(kommunenummer)
 
         if not kommune_med_boplikt:
+            LOGGER.info("Kommune %s har ikke boplikt, returnerer UTENFOR", kommunenummer)
             return "application/json", {"status": "UTENFOR", "treff": []}
 
         if all(not kommune["delvis_boplikt"] for kommune in kommune_med_boplikt):
+            LOGGER.info("Kommune %s har full boplikt, returnerer INNENFOR", kommunenummer)
             return "application/json", {
                 "status": "INNENFOR",
                 "treff": [
@@ -131,6 +136,7 @@ class BopliktSjekkProcessor(BaseProcessor):
                 ],
             }
 
+        LOGGER.info("Kommune %s har delvis boplikt, henter teiggeometri fra Matrikkel-API", kommunenummer)
         geom, hjelpelinjetyper, geom_validering, har_bue = hent_teiggeometri(
             get_matrikkel_client(),
             kommunenummer,
@@ -141,12 +147,14 @@ class BopliktSjekkProcessor(BaseProcessor):
         )
 
         if geom is None:
+            LOGGER.info("Fant ingen teiggeometri for %s", mnr)
             raise ProcessorExecuteError(
                 f"Fant ingen teiggeometri for matrikkelenhet i kommune {kommunenummer}. "
                 "Kontroller at kommunenummer, gårdsnummer og bruksnummer er korrekt."
             )
 
         result = sjekk_boplikt(geom, kommunenummer)
+        LOGGER.info("Bopliktsjekk fullført for %s, status: %s", mnr, result.get("status"))
         result["teig"] = {
             # "geometri": geom,
             # "geometri_gyldig": geom_validering,

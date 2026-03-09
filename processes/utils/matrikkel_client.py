@@ -82,7 +82,7 @@ def hent_matrikkelenhet_med_teiger(
                 "locale": "no_NO_B",
                 "brukOriginaleKoordinater": False,
                 "koordinatsystemKodeId": {"value": 11},  # EPSG:25833
-                "systemVersion": "trunk",
+                "systemVersion": "4.25.0.0",
                 "klientIdentifikasjon": "ogc-api",
                 "snapshotVersion": {"timestamp": "9999-01-01T00:00:00+01:00"},
             },
