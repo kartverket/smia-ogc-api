@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/deploy"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -16,6 +16,8 @@ updates:
       day: "monday"
       time: "03:59"
       timezone: "Europe/Oslo"
+    ignore:
+      - dependency-name: "kartverket/smia-apps"
 
   - package-ecosystem: "docker"
     directory: "/deploy"
