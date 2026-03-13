@@ -3,26 +3,23 @@ Prosessor for bopliktsjekk med matrikkelnummer som input.
 
 Fremgangsmåte:
   1. Sjekker først om kommunen til matrikkelenheten har boplikt.
-  2. Hvis ingen boplikt: returnerer "UTENFOR".
-  3. Hvis full boplikt: returnerer "INNENFOR" uten å hente geometri.
+  2. Hvis ingen boplikt: returnerer boplikt=nei.
+  3. Hvis full boplikt: returnerer boplikt=ja uten å hente geometri.
   4. Hvis delvis boplikt: henter teiggeometri fra Matrikkel-API og gjør romlig sjekk mot bopliktområder.
 
-Parametre:
-    - kommunenummer (str): Kommunenummer (4 siffer, f.eks. '3024')
-    - gardsnummer (int): Gårdsnummer
-    - bruksnummer (int): Bruksnummer
-    - festenummer (int, valgfri): Festenummer, 0 hvis ingen
-    - seksjonsnummer (int, valgfri): Seksjonsnummer, 0 hvis ingen
-
 Returnerer:
-    - dict: Status og treff mot bopliktområder
+    - dict: boplikt (ja/nei/delvis) og materielle vilkår
 """
 
 import logging
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-from processes.utils.boplikt_db import sjekk_boplikt, sjekk_kommune_boplikt
+from processes.utils.boplikt_db import (
+    bygg_boplikt_resultat,
+    sjekk_boplikt,
+    sjekk_kommune_boplikt,
+)
 from processes.utils.matrikkel_client import get_matrikkel_client
 from processes.utils.matrikkel_geometry import hent_teiggeometri
 
@@ -77,10 +74,20 @@ PROCESS_METADATA = {
     "outputs": {
         "resultat": {
             "title": "Bopliktsjekk-resultat",
-            "description": "Status og treff mot bopliktområder",
             "schema": {
                 "type": "object",
                 "contentMediaType": "application/json",
+                "properties": {
+                    "boplikt": {
+                        "type": "string",
+                        "enum": ["ja", "nei", "delvis"],
+                    },
+                    "bebygdEiendom": {"type": "boolean"},
+                    "ikkeHelarsboligUnderOppforing": {"type": "boolean"},
+                    "ubebygdTomt": {"type": "boolean"},
+                    "unntakFraSlektskapsunntak": {"type": "boolean"},
+                    "andreAvgrensninger": {"type": "string"},
+                },
             },
         }
     },
@@ -123,22 +130,14 @@ class BopliktSjekkProcessor(BaseProcessor):
         kommune_med_boplikt = sjekk_kommune_boplikt(kommunenummer)
 
         if not kommune_med_boplikt:
-            LOGGER.info(
-                "Kommune %s har ikke boplikt, returnerer UTENFOR", kommunenummer
-            )
-            return "application/json", {"status": "UTENFOR", "treff": []}
+            LOGGER.info("Kommune %s har ikke boplikt, returnerer nei", kommunenummer)
+            return "application/json", {"boplikt": "nei"}
 
         if all(not kommune["delvis_boplikt"] for kommune in kommune_med_boplikt):
-            LOGGER.info(
-                "Kommune %s har full boplikt, returnerer INNENFOR", kommunenummer
+            LOGGER.info("Kommune %s har full boplikt, returnerer ja", kommunenummer)
+            return "application/json", bygg_boplikt_resultat(
+                "ja", kommune_med_boplikt[0]
             )
-            return "application/json", {
-                "status": "INNENFOR",
-                "treff": [
-                    {**kommune, "relasjon": "INNENFOR"}
-                    for kommune in kommune_med_boplikt
-                ],
-            }
 
         LOGGER.info(
             "Kommune %s har delvis boplikt, henter teiggeometri fra Matrikkel-API",
@@ -162,12 +161,6 @@ class BopliktSjekkProcessor(BaseProcessor):
 
         result = sjekk_boplikt(geom, kommunenummer)
         LOGGER.info(
-            "Bopliktsjekk fullført for %s, status: %s", mnr, result.get("status")
+            "Bopliktsjekk fullført for %s, boplikt: %s", mnr, result.get("boplikt")
         )
-        result["teig"] = {
-            # "geometri": geom,
-            # "geometri_gyldig": geom_validering,
-            "hjelpelinjetyper": hjelpelinjetyper,
-            # "har_bue": har_bue,
-        }
         return "application/json", result

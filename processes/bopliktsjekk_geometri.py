@@ -33,10 +33,20 @@ PROCESS_METADATA = {
     "outputs": {
         "resultat": {
             "title": "Bopliktsjekk-resultat",
-            "description": "Status og treff mot bopliktområder",
             "schema": {
                 "type": "object",
                 "contentMediaType": "application/json",
+                "properties": {
+                    "boplikt": {
+                        "type": "string",
+                        "enum": ["ja", "nei", "delvis"],
+                    },
+                    "bebygdEiendom": {"type": "boolean"},
+                    "ikkeHelarsboligUnderOppforing": {"type": "boolean"},
+                    "ubebygdTomt": {"type": "boolean"},
+                    "unntakFraSlektskapsunntak": {"type": "boolean"},
+                    "andreAvgrensninger": {"type": "string"},
+                },
             },
         }
     },
