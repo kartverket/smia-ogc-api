@@ -72,11 +72,11 @@ Step 1: sjekk_kommune_boplikt(kommunenummer)
         ▼
         Har kommunen boplikt i det hele tatt?
         │
-        ├── NEI ──→ { status: "UTENFOR", treff: [] }  ← FERDIG (ingen DB-sjekk)
+        ├── NEI ──→ { boplikt: "nei" }  ← FERDIG (ingen DB-sjekk)
         │
         └── JA ──→ Har alle bopliktområder full boplikt (delvis_boplikt = false)?
                    │
-                   ├── JA (alle fulle) ──→ { status: "INNENFOR", treff: [...] }  ← FERDIG (ingen geometri)
+                   ├── JA (alle fulle) ──→ { boplikt: "ja", ...vilkår }  ← FERDIG (ingen geometri)
                    │
                    └── NEI (noen delvis) ──→ Hent geometri fra Matrikkel
                                              │
@@ -84,7 +84,7 @@ Step 1: sjekk_kommune_boplikt(kommunenummer)
                                         sjekk_boplikt(geom, kommunenummer)
                                              │
                                              ▼
-                                        { status, treff, teig: { geometri, hjelpelinjetyper, ... } }
+                                        { boplikt: "ja/nei/delvis", ...vilkår }
 ```
 
 **Viktig optimalisering:** Geometrioppslag mot Matrikkel SOAP er kun nødvendig ved delvis boplikt. Full boplikt betyr hele kommunen er innenfor — ingen grunn til å sjekke koordinater.
@@ -301,17 +301,17 @@ AND kommunenummer = %s
 ### Statustolkning
 
 ```
-Ingen treff fra ST_Intersects  →  status: "UTENFOR"
+Ingen treff fra ST_Intersects  →  boplikt: "nei"
 
-Alle treff har is_within=true  →  status: "INNENFOR"
+Alle treff har is_within=true  →  boplikt: "ja"
 (geometrien ligger helt inni alle overlappende bopliktområder)
 
-Minst ett treff har is_within=false  →  status: "DELVIS_OVERLAPP"
+Minst ett treff har is_within=false  →  boplikt: "delvis"
 (geometrien krysser grensen til et bopliktområde)
 ```
 
 ```
-Eksempel — INNENFOR:           Eksempel — DELVIS_OVERLAPP:
+Eksempel — boplikt=ja:         Eksempel — boplikt=delvis:
 
   ┌──────────────────┐           ┌──────────────────┐
   │  Bopliktområde   │           │  Bopliktområde   │

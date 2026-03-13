@@ -10,18 +10,52 @@ from pygeoapi.process.base import ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
 
-_RESPONSE_COLUMNS = [
+_KOMMUNE_COLUMNS = [
     "kommunenummer",
-    "fylkesnummer",
     "delvis_boplikt",
-    "forskriftsreferanse",
-    "opphav",
+]
+
+_VILKAAR_COLUMNS = [
     "bebygd_eiendom",
     "helaarsbolig",
     "ubebygd_tomt",
     "slektskapsunntak",
     "andre_avgrensninger",
 ]
+
+_VILKAAR_RENAME = {
+    "bebygd_eiendom": "bebygdEiendom",
+    "helaarsbolig": "ikkeHelarsboligUnderOppforing",
+    "ubebygd_tomt": "ubebygdTomt",
+    "slektskapsunntak": "unntakFraSlektskapsunntak",
+    "andre_avgrensninger": "andreAvgrensninger",
+}
+
+_ALL_COLUMNS = _KOMMUNE_COLUMNS + _VILKAAR_COLUMNS
+
+
+def _gjelder_to_bool(value):
+    if isinstance(value, str):
+        return value.lower() == "gjelder"
+    return bool(value)
+
+
+def _map_vilkaar(row_dict):
+    result = {}
+    for db_col, api_name in _VILKAAR_RENAME.items():
+        val = row_dict.get(db_col)
+        if db_col == "andre_avgrensninger":
+            result[api_name] = val
+        else:
+            result[api_name] = _gjelder_to_bool(val)
+    return result
+
+
+def bygg_boplikt_resultat(boplikt, row_dict):
+    """Bygg flat response-dict med boplikt-status og materielle vilkår."""
+    result = {"boplikt": boplikt}
+    result.update(_map_vilkaar(row_dict))
+    return result
 
 _db_pool = None
 
@@ -82,21 +116,21 @@ def sjekk_kommune_boplikt(kommunenummer):
     Raises:
         ProcessorExecuteError: Ved databasefeil.
     """
-    cols = ", ".join(_RESPONSE_COLUMNS)
+    cols = ", ".join(_ALL_COLUMNS)
     sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
     rows = _execute_query(sql, (kommunenummer,))
-    return [dict(zip(_RESPONSE_COLUMNS, row)) for row in rows]
+    return [dict(zip(_ALL_COLUMNS, row)) for row in rows]
 
 
 def sjekk_boplikt(geojson_geom, kommunenummer=None):
     """Sjekk om en GeoJSON-geometri treffer bopliktområder i databasen.
 
-    Kjører ST_Intersects og ST_Within mot kommuneinfo.bopliktomraade
-    og returnerer et dict med 'status' (UTENFOR/INNENFOR/DELVIS_OVERLAPP)
-    og 'treff'.
+    Kjører ST_Intersects og ST_Within mot kommuneinfo.bopliktomraade.
+    Returnerer flat dict med boplikt (ja/nei/delvis) og materielle vilkår
+    fra første treff.
     """
     geojson_str = json.dumps(geojson_geom)
-    cols = ", ".join(_RESPONSE_COLUMNS)
+    cols = ", ".join(_ALL_COLUMNS)
 
     sql = f"""
         WITH input AS (
@@ -115,17 +149,14 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
 
     rows = _execute_query(sql, params)
 
-    treff = []
-    for row in rows:
-        props = dict(zip(_RESPONSE_COLUMNS, row[:-1]))
-        props["relasjon"] = "INNENFOR" if row[-1] else "DELVIS_OVERLAPP"
-        treff.append(props)
+    if not rows:
+        return {"boplikt": "nei"}
 
-    if not treff:
-        status = "UTENFOR"
-    elif all(t["relasjon"] == "INNENFOR" for t in treff):
-        status = "INNENFOR"
+    all_within = all(row[-1] for row in rows)
+    if len(rows) > 1 or not all_within:
+        boplikt = "delvis"
     else:
-        status = "DELVIS_OVERLAPP"
+        boplikt = "ja"
 
-    return {"status": status, "treff": treff}
+    first = dict(zip(_ALL_COLUMNS, rows[0][:-1]))
+    return bygg_boplikt_resultat(boplikt, first)

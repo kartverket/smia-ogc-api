@@ -736,6 +736,23 @@ paths:
           content:
             application/json:
               schema:
+                properties:
+                  andreAvgrensninger:
+                    type: string
+                  bebygdEiendom:
+                    type: boolean
+                  boplikt:
+                    enum:
+                    - ja
+                    - nei
+                    - delvis
+                    type: string
+                  ikkeHelarsboligUnderOppforing:
+                    type: boolean
+                  ubebygdTomt:
+                    type: boolean
+                  unntakFraSlektskapsunntak:
+                    type: boolean
                 type: object
           description: Process output schema
         '201':
@@ -781,6 +798,23 @@ paths:
           content:
             application/json:
               schema:
+                properties:
+                  andreAvgrensninger:
+                    type: string
+                  bebygdEiendom:
+                    type: boolean
+                  boplikt:
+                    enum:
+                    - ja
+                    - nei
+                    - delvis
+                    type: string
+                  ikkeHelarsboligUnderOppforing:
+                    type: boolean
+                  ubebygdTomt:
+                    type: boolean
+                  unntakFraSlektskapsunntak:
+                    type: boolean
                 type: object
           description: Process output schema
         '201':

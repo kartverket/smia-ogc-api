@@ -6,9 +6,9 @@ Tar inn geometri og sjekker den mot alle bopliktområdene.
 ```mermaid
 flowchart TD
     A[Input: GeoJSON-geometri i EPSG:25833] --> B[Romlig sjekk mot bopliktområder]
-    B --> C[Return: UTENFOR]
-    B --> D[Return: INNENFOR med boplikt data]
-    B --> E[Return: DELVIS_OVERLAPP med boplikt data]
+    B --> C[Return: boplikt=nei]
+    B --> D[Return: boplikt=ja med materielle vilkår]
+    B --> E[Return: boplikt=delvis med materielle vilkår]
 ```
 
 ## Matrikkelsnummer som input
@@ -29,19 +29,19 @@ Bopliktsjekk via matrikkelsnummer. Sjekker kommunenivå først for å unngå et 
 ```mermaid
 flowchart TD
     A[Input: kommunenr + gnr/bnr/fnr/snr] --> B{Har kommunen boplikt?}
-    B -- Nei --> C[Return: UTENFOR]
+    B -- Nei --> C[Return: boplikt=nei]
     B -- Ja --> D{delvis_boplikt?}
-    D -- false: hele kommunen --> E[Return: INNENFOR med boplikt data]
+    D -- false: hele kommunen --> E[Return: boplikt=ja med materielle vilkår]
     D -- true: deler av kommunen --> F[Hent geometri fra Matrikkel]
     F --> G[Romlig sjekk mot bopliktområder]
-    G --> H[Return: UTENFOR]
-    G --> I[Return: INNENFOR med boplikt data]
-    G --> J[Return: DELVIS_OVERLAPP med boplikt data]
+    G --> H[Return: boplikt=nei]
+    G --> I[Return: boplikt=ja med materielle vilkår]
+    G --> J[Return: boplikt=delvis med materielle vilkår]
 ```
 
 1. **Sjekk kommune** — enkel SQL på `kommunenummer` uten geometri
-2. **Ingen treff** — kommunen har ikke boplikt → `UTENFOR`, ferdig
-3. **Hel boplikt** — alle treff har `delvis_boplikt=false` → `INNENFOR`, ferdig
+2. **Ingen treff** — kommunen har ikke boplikt → `nei`, ferdig
+3. **Hel boplikt** — alle treff har `delvis_boplikt=false` → `ja`, ferdig
 4. **Delvis boplikt** — hent teiggeometri fra Matrikkel, kjør `ST_Intersects`/`ST_Within` mot bopliktområder
 
 ## Tilgangsstyring
