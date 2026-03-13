@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/deploy"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -16,6 +16,13 @@ updates:
       day: "monday"
       time: "03:59"
       timezone: "Europe/Oslo"
+    allow:
+      - dependency-name: "actions/*"
+      - dependency-name: "github/*"
+      - dependency-name: "docker/*"
+      - dependency-name: "mathieudutour/*"
+      - dependency-name: "astral-sh/*"
+      - dependency-name: "kartverket/pharos"
 
   - package-ecosystem: "docker"
     directory: "/deploy"
