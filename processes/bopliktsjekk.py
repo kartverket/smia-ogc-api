@@ -20,6 +20,7 @@ from processes.utils.boplikt_db import (
     sjekk_boplikt,
     sjekk_kommune_boplikt,
 )
+from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
 from processes.utils.matrikkel_client import get_matrikkel_client
 from processes.utils.matrikkel_geometry import hent_teiggeometri
 
@@ -71,32 +72,13 @@ PROCESS_METADATA = {
             "maxOccurs": 1,
         },
     },
-    "outputs": {
-        "resultat": {
-            "title": "Bopliktsjekk-resultat",
-            "schema": {
-                "type": "object",
-                "contentMediaType": "application/json",
-                "properties": {
-                    "boplikt": {
-                        "type": "string",
-                        "enum": ["ja", "nei", "delvis"],
-                    },
-                    "bebygdEiendom": {"type": "boolean"},
-                    "ikkeHelarsboligUnderOppforing": {"type": "boolean"},
-                    "ubebygdTomt": {"type": "boolean"},
-                    "unntakFraSlektskapsunntak": {"type": "boolean"},
-                    "andreAvgrensninger": {"type": "string"},
-                },
-            },
-        }
-    },
+    "outputs": BOPLIKTSJEKK_OUTPUT,
     "example": {
         "inputs": {
             "kommunenummer": "4203",
             "gardsnummer": 306,
             "bruksnummer": 21,
-        }
+        },
     },
 }
 
@@ -121,7 +103,7 @@ class BopliktSjekkProcessor(BaseProcessor):
 
         if not kommunenummer or gardsnummer is None or bruksnummer is None:
             raise ProcessorExecuteError(
-                "Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
+                user_msg="Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
             )
 
         mnr = f"{kommunenummer}-{gardsnummer}/{bruksnummer}/{festenummer}/{seksjonsnummer}"
@@ -130,13 +112,13 @@ class BopliktSjekkProcessor(BaseProcessor):
         kommune_med_boplikt = sjekk_kommune_boplikt(kommunenummer)
 
         if not kommune_med_boplikt:
-            LOGGER.info("Kommune %s har ikke boplikt, returnerer nei", kommunenummer)
-            return "application/json", {"boplikt": "nei"}
+            LOGGER.info("Kommune %s har ikke boplikt, returnerer INGEN", kommunenummer)
+            return "application/json", {"iBopliktomrade": "NEI"}
 
         if all(not kommune["delvis_boplikt"] for kommune in kommune_med_boplikt):
-            LOGGER.info("Kommune %s har full boplikt, returnerer ja", kommunenummer)
+            LOGGER.info("Kommune %s har full boplikt, returnerer FULL", kommunenummer)
             return "application/json", bygg_boplikt_resultat(
-                "ja", kommune_med_boplikt[0]
+                "JA", kommune_med_boplikt[0]
             )
 
         LOGGER.info(
@@ -155,12 +137,14 @@ class BopliktSjekkProcessor(BaseProcessor):
         if geom is None:
             LOGGER.info("Fant ingen teiggeometri for %s", mnr)
             raise ProcessorExecuteError(
-                f"Fant ingen teiggeometri for matrikkelenhet i kommune {kommunenummer}. "
+                user_msg="Fant ingen teiggeometri. "
                 "Kontroller at kommunenummer, gårdsnummer og bruksnummer er korrekt."
             )
 
         result = sjekk_boplikt(geom, kommunenummer)
         LOGGER.info(
-            "Bopliktsjekk fullført for %s, boplikt: %s", mnr, result.get("boplikt")
+            "Bopliktsjekk fullført for %s, iBopliktomrade: %s",
+            mnr,
+            result.get("iBopliktomrade"),
         )
         return "application/json", result

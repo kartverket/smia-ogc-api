@@ -28,7 +28,9 @@ def get_matrikkel_client():
                 "Kunne ikke opprette Matrikkel-klient (sjekk WSDL-URL og credentials): %s",
                 e,
             )
-            raise
+            raise ProcessorExecuteError(
+                user_msg="En feil oppstod, prøv igjen senere."
+            ) from None
     return _matrikkel_client
 
 
@@ -90,13 +92,13 @@ def hent_matrikkelenhet_med_teiger(
     except zeep.exceptions.Fault as e:
         LOGGER.error("SOAP fault: %s", e)
         raise ProcessorExecuteError(
-            "Kunne ikke hente matrikkelenhet. Kontroller at oppgitte verdier er korrekte."
-        ) from e
+            user_msg="En feil oppstod, prøv igjen senere."
+        ) from None
     except Exception as e:
         LOGGER.error("SOAP error (%s): %s", type(e).__name__, e)
         raise ProcessorExecuteError(
-            "Feil ved oppslag mot Matrikkel. Prøv igjen senere."
-        ) from e
+            user_msg="En feil oppstod, prøv igjen senere."
+        ) from None
 
     result_dict = helpers.serialize_object(result, dict)
     return json.loads(json.dumps(result_dict, default=str))

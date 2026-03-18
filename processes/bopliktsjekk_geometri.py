@@ -5,6 +5,7 @@ import logging
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 from processes.utils.boplikt_db import sjekk_boplikt
+from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,26 +31,7 @@ PROCESS_METADATA = {
             "maxOccurs": 1,
         }
     },
-    "outputs": {
-        "resultat": {
-            "title": "Bopliktsjekk-resultat",
-            "schema": {
-                "type": "object",
-                "contentMediaType": "application/json",
-                "properties": {
-                    "boplikt": {
-                        "type": "string",
-                        "enum": ["ja", "nei", "delvis"],
-                    },
-                    "bebygdEiendom": {"type": "boolean"},
-                    "ikkeHelarsboligUnderOppforing": {"type": "boolean"},
-                    "ubebygdTomt": {"type": "boolean"},
-                    "unntakFraSlektskapsunntak": {"type": "boolean"},
-                    "andreAvgrensninger": {"type": "string"},
-                },
-            },
-        }
-    },
+    "outputs": BOPLIKTSJEKK_OUTPUT,
     "example": {
         "inputs": {
             "geometri": {
@@ -63,7 +45,7 @@ PROCESS_METADATA = {
                     ]
                 ],
             }
-        }
+        },
     },
 }
 
@@ -78,12 +60,12 @@ class BopliktSjekkGeometriProcessor(BaseProcessor):
         """Valider innsendt geometri og kjør bopliktsjekk mot databasen."""
         geojson_geom = data.get("geometri")
         if geojson_geom is None:
-            raise ProcessorExecuteError("Mangler input: geometri")
+            raise ProcessorExecuteError(user_msg="Mangler input: geometri")
 
         geom_type = geojson_geom.get("type", "")
         if geom_type not in ("Point", "Polygon", "MultiPolygon"):
             raise ProcessorExecuteError(
-                f"Ugyldig geometritype: {geom_type}. "
+                user_msg=f"Ugyldig geometritype: {geom_type}. "
                 "Må være Point, Polygon eller MultiPolygon."
             )
 

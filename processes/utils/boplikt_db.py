@@ -21,6 +21,7 @@ _VILKAAR_COLUMNS = [
     "ubebygd_tomt",
     "slektskapsunntak",
     "andre_avgrensninger",
+    "usikker_avgrensning",
 ]
 
 _VILKAAR_RENAME = {
@@ -29,6 +30,7 @@ _VILKAAR_RENAME = {
     "ubebygd_tomt": "ubebygdTomt",
     "slektskapsunntak": "unntakFraSlektskapsunntak",
     "andre_avgrensninger": "andreAvgrensninger",
+    "usikker_avgrensning": "usikkerAvgrensning",
 }
 
 _ALL_COLUMNS = _KOMMUNE_COLUMNS + _VILKAAR_COLUMNS
@@ -44,7 +46,7 @@ def _map_vilkaar(row_dict):
     result = {}
     for db_col, api_name in _VILKAAR_RENAME.items():
         val = row_dict.get(db_col)
-        if db_col == "andre_avgrensninger":
+        if db_col in ("andre_avgrensninger", "usikker_avgrensning"):
             result[api_name] = val
         else:
             result[api_name] = _gjelder_to_bool(val)
@@ -53,7 +55,7 @@ def _map_vilkaar(row_dict):
 
 def bygg_boplikt_resultat(boplikt, row_dict):
     """Bygg flat response-dict med boplikt-status og materielle vilkår."""
-    result = {"boplikt": boplikt}
+    result = {"iBopliktomrade": boplikt}
     result.update(_map_vilkaar(row_dict))
     return result
 
@@ -64,22 +66,26 @@ _db_pool = None
 def _get_pool():
     global _db_pool
     if _db_pool is None:
-        _db_pool = ThreadedConnectionPool(
-            minconn=1,
-            maxconn=2,
-            host=os.environ.get("DB_HOST", "localhost"),
-            port=os.environ.get("DB_PORT", "5432"),
-            dbname=os.environ.get("DB_NAME", "postgres"),
-            user=os.environ.get("DB_USER", "postgres"),
-            password=os.environ.get("DB_PASSWORD", "postgres"),
-        )
+        try:
+            _db_pool = ThreadedConnectionPool(
+                minconn=1,
+                maxconn=2,
+                host=os.environ.get("DB_HOST", "localhost"),
+                port=os.environ.get("DB_PORT", "5432"),
+                dbname=os.environ.get("DB_NAME", "postgres"),
+                user=os.environ.get("DB_USER", "postgres"),
+                password=os.environ.get("DB_PASSWORD", "postgres"),
+            )
+        except Exception as e:
+            LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
+            raise ProcessorExecuteError(
+                user_msg="En feil oppstod, prøv igjen senere."
+            ) from None
     return _db_pool
 
 
 def _execute_query(sql, params):
     db_pool = _get_pool()
-    last_err = None
-
     for attempt in range(2):
         conn = db_pool.getconn()
         try:
@@ -88,17 +94,20 @@ def _execute_query(sql, params):
                     cur.execute(sql, params)
                     return cur.fetchall()
         except (OperationalError, InterfaceError) as e:
-            last_err = e
             LOGGER.warning(
                 "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
             )
         except Exception as e:
             LOGGER.error("Databasefeil: %s", e)
-            raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from e
+            raise ProcessorExecuteError(
+                user_msg="En feil oppstod, prøv igjen senere."
+            ) from None
         finally:
             db_pool.putconn(conn, close=bool(conn.closed))
 
-    raise ProcessorExecuteError("Databasefeil, prøv igjen senere.") from last_err
+    raise ProcessorExecuteError(
+        user_msg="En feil oppstod, prøv igjen senere."
+    ) from None
 
 
 def sjekk_kommune_boplikt(kommunenummer):
@@ -151,13 +160,13 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     rows = _execute_query(sql, params)
 
     if not rows:
-        return {"boplikt": "nei"}
+        return {"iBopliktomrade": "NEI"}
 
     all_within = all(row[-1] for row in rows)
     if len(rows) > 1 or not all_within:
-        boplikt = "delvis"
+        boplikt = "DELVIS"
     else:
-        boplikt = "ja"
+        boplikt = "JA"
 
     first = dict(zip(_ALL_COLUMNS, rows[0][:-1]))
     return bygg_boplikt_resultat(boplikt, first)
