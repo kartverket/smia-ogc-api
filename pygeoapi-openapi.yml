@@ -321,6 +321,7 @@ paths:
             - ubebygd_tomt
             - slektskapsunntak
             - andre_avgrensninger
+            - usikker_avgrensning
             type: string
           type: array
         style: form
@@ -411,6 +412,13 @@ paths:
         required: false
         schema:
           type: string
+        style: form
+      - explode: false
+        in: query
+        name: usikker_avgrensning
+        required: false
+        schema:
+          type: boolean
         style: form
       responses:
         '200':
@@ -735,23 +743,42 @@ paths:
         '200':
           content:
             application/json:
-              schema:
+              schema: &id003
                 properties:
                   andreAvgrensninger:
+                    description: Andre materielle avgrensninger gitt i lokal bopliktforskrift.
+                    nullable: true
                     type: string
                   bebygdEiendom:
+                    description: "Nedsatt konsesjonsgrense for bopliktomr\xE5det gjelder\
+                      \ for bebygd eiendom som er eller har v\xE6rt i bruk som hel\xE5\
+                      rsbolig."
                     type: boolean
-                  boplikt:
+                  iBopliktomrade:
+                    description: "Om geometrien er i et bopliktomr\xE5de. JA = helt\
+                      \ innenfor, NEI = utenfor, DELVIS = delvis innenfor."
                     enum:
-                    - ja
-                    - nei
-                    - delvis
+                    - JA
+                    - NEI
+                    - DELVIS
                     type: string
                   ikkeHelarsboligUnderOppforing:
+                    description: "Nedsatt konsesjonsgrense for bopliktomr\xE5det gjelder\
+                      \ for eiendom med bebyggelse som ikke er tatt i bruk som hel\xE5\
+                      rsbolig, herunder eiendom under oppf\xF8ring regulert til boligform\xE5\
+                      l."
                     type: boolean
                   ubebygdTomt:
+                    description: "Nedsatt konsesjonsgrense for bopliktomr\xE5det gjelder\
+                      \ for ubebygd tomt regulert til boligform\xE5l."
                     type: boolean
                   unntakFraSlektskapsunntak:
+                    description: "Angir om det er innf\xF8rt unntak fra slektskapsunntaket."
+                    type: boolean
+                  usikkerAvgrensning:
+                    description: "Angir hvorvidt bopliktomr\xE5dets geometriske representasjon\
+                      \ er entydig definert. Dersom usikker (true) m\xE5 det manuelt\
+                      \ vurderes i tr\xE5d med forskriftens materielle vilk\xE5r."
                     type: boolean
                 type: object
           description: Process output schema
@@ -797,25 +824,7 @@ paths:
         '200':
           content:
             application/json:
-              schema:
-                properties:
-                  andreAvgrensninger:
-                    type: string
-                  bebygdEiendom:
-                    type: boolean
-                  boplikt:
-                    enum:
-                    - ja
-                    - nei
-                    - delvis
-                    type: string
-                  ikkeHelarsboligUnderOppforing:
-                    type: boolean
-                  ubebygdTomt:
-                    type: boolean
-                  unntakFraSlektskapsunntak:
-                    type: boolean
-                type: object
+              schema: *id003
           description: Process output schema
         '201':
           $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/ExecuteAsync.yaml
