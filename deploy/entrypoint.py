@@ -42,7 +42,7 @@ def set_security_headers(response):
         "style-src 'self' 'unsafe-inline' https://unpkg.com; "
         "img-src 'self' https://kartverket.no https://www.kartverket.no https://cache.kartverket.no data:; "
         "font-src 'self'; "
-        "connect-src 'self'"
+        "connect-src 'self' https://schemas.opengis.net https://raw.githubusercontent.com"
     )
     response.headers.pop("X-Powered-By", None)
     response.headers.pop("Server", None)
