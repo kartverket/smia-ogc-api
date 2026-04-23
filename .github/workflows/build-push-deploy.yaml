@@ -64,7 +64,7 @@ jobs:
       - name: "Run Pharos"
         uses: kartverket/pharos@v0.6.3
         with:
-          allow_severity_level: critical
+          allow_severity_level: medium
           image_url: ${{ needs.build.outputs.image_url }}
 
   deploy-argo:
