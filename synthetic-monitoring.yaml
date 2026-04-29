@@ -1,0 +1,7 @@
+- targets:
+    - https://inndelinger.api.kartverket.no/health
+  labels:
+    team: smia
+    env: prod
+    service: smia-ogc-api
+
