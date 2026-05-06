@@ -52,7 +52,7 @@ def set_security_headers(response):
 metrics = GunicornPrometheusMetrics(app)
 
 
-@app.route("/v1/health")
+@app.route("/health")
 @metrics.do_not_track()
 def health():
     return "", 200
