@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 API_KEY = os.environ.get("OGC_API_KEY")
 
-OPEN_PATHS = {"/v1/", "/v1/openapi", "/v1/conformance", "/v1/health"}
+OPEN_PATHS = {"/v1/", "/v1/openapi", "/v1/conformance", "/health"}
 
 
 @app.before_request
@@ -52,7 +52,7 @@ def set_security_headers(response):
 metrics = GunicornPrometheusMetrics(app)
 
 
-@app.route("/health")
+@app.route("/v1/health")
 @metrics.do_not_track()
 def health():
     return "", 200
