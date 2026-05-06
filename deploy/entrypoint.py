@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 API_KEY = os.environ.get("OGC_API_KEY")
 
-OPEN_PATHS = {"/", "/openapi", "/conformance", "/health"}
+OPEN_PATHS = {"/v1/", "/v1/openapi", "/v1/conformance", "/v1/health"}
 
 
 @app.before_request
