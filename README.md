@@ -25,6 +25,7 @@ Dette installerer riktig Python-versjon (3.12+) og alle avhengigheter.
 Serveren starter på http://localhost:5000.
 
 Scriptet gjør to ting:
+
 1. Genererer OpenAPI-spesifikasjonen fra `pygeoapi-config.yml`
 2. Starter pygeoapi-serveren
 
@@ -47,10 +48,18 @@ uv run ruff check     # lint
 uv run ruff format    # formater
 ```
 
-For VS Code-brukere finnes det ferdig oppsett i `.vscode/settings.json` som formaterer og fikser imports ved lagring. Bruker du en annen editor, se [Ruff editor-integrasjoner](https://docs.astral.sh/ruff/editors/).
+For VS Code-brukere finnes det ferdig oppsett i `.vscode/settings.json` som formaterer og fikser
+imports ved lagring. Bruker du en annen editor, se
+[Ruff editor-integrasjoner](https://docs.astral.sh/ruff/editors/).
 
 ## Monitorering
 
-Det finnes et dashboard i Grafana for dette APIet. Gå til [Smia: Matrikkeltjenester](https://monitoring.kartverket.cloud/d/ad6ed173-cb04-48ee-add2-6b3d5538fdec/smia3a-matrikkeltjenester?orgId=1&from=now-1h&to=now&timezone=browser&var-prometheus=P3C08CCCD0A204B5D&var-tjeneste=smia-ogc-api&var-loki=PC49BB3D5AB252A94&var-loglevel=INFO&var-loglevel=WARN&var-loglevel=ERROR&var-namespace=smia-tjenester-main) i Grafana, og velg smia-ogc-api under "tjeneste". Husk å justere om du skal se prod eller dev aktivitet. 
+Det finnes et dashboard i Grafana for dette APIet. Gå til
+[Smia: Matrikkeltjenester](https://monitoring.kartverket.cloud/d/ad6ed173-cb04-48ee-add2-6b3d5538fdec/smia3a-matrikkeltjenester?orgId=1&from=now-1h&to=now&timezone=browser&var-prometheus=P3C08CCCD0A204B5D&var-tjeneste=smia-ogc-api&var-loki=PC49BB3D5AB252A94&var-loglevel=INFO&var-loglevel=WARN&var-loglevel=ERROR&var-namespace=smia-tjenester-main)
+i Grafana, og velg smia-ogc-api under "tjeneste". Husk å justere om du skal se prod eller dev
+aktivitet.
 
-Det finnes også er dashboard for databasene denne applikasjonen bruker i de forskjellige miljøene. Gå til [denne lenken](https://rin-ap1450.statkart.no/d/kommuneinfoapi_pg_details/postgresql-details?orgId=1) for å se dashboardet. Logg in med Microsoft-bruker. 
+Det finnes også er dashboard for databasene denne applikasjonen bruker i de forskjellige miljøene.
+Gå til
+[denne lenken](https://rin-ap1450.statkart.no/d/kommuneinfoapi_pg_details/postgresql-details?orgId=1)
+for å se dashboardet. Logg in med Microsoft-bruker.
