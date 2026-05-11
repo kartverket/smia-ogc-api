@@ -63,3 +63,6 @@ Det finnes også er dashboard for databasene denne applikasjonen bruker i de for
 Gå til
 [denne lenken](https://rin-ap1450.statkart.no/d/kommuneinfoapi_pg_details/postgresql-details?orgId=1)
 for å se dashboardet. Logg in med Microsoft-bruker.
+
+Det er satt opp syntetisk overvåking for API-et. Se
+[dashboardet her](https://monitoring.kartverket.cloud/d/olb644d/oppetid-syntetisk-overvaking?var-interval=$__auto&orgId=1&from=now-30d&to=now&timezone=browser&var-metrics=P0A5FFD43F759AAC7&var-deployment_environment_name=prod&var-team=smia&var-env=$__all&var-job=http_2xx_get_10s&var-instance=https:%2F%2Finndelinger.api.kartverket.no%2Fhealth&var-_instances_all=$__all&var-slo=0.99).
