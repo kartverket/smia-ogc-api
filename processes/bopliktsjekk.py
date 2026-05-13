@@ -95,7 +95,7 @@ class BopliktSjekkProcessor(BaseProcessor):
                 user_msg="Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
             )
 
-        mnr = f"{kommunenummer}-{gardsnummer}/{bruksnummer}/{festenummer}/{seksjonsnummer}"
+        mnr = f"{kommunenummer}-{gardsnummer}/{bruksnummer}/{0}/{0}"
         LOGGER.info("Bopliktsjekk startet for matrikkelenhet %s", mnr)
 
         kommune_med_boplikt = sjekk_kommune_boplikt(kommunenummer)
