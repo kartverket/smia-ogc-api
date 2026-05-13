@@ -10,9 +10,7 @@ from processes.utils.matrikkel_client import hent_matrikkelenhet_med_teiger
 LOGGER = logging.getLogger(__name__)
 
 
-def hent_teiggeometri(
-    client, kommunenummer, gardsnummer, bruksnummer
-):
+def hent_teiggeometri(client, kommunenummer, gardsnummer, bruksnummer):
     """Hent teiggeometri fra Matrikkel-API og returner som GeoJSON.
 
     Args:

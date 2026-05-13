@@ -52,9 +52,7 @@ def create_matrikkel_client(wsdl=None):
     return zeep.Client(wsdl=wsdl, settings=settings, transport=transport)
 
 
-def hent_matrikkelenhet_med_teiger(
-    client, kommunenummer, gardsnummer, bruksnummer
-):
+def hent_matrikkelenhet_med_teiger(client, kommunenummer, gardsnummer, bruksnummer):
     """Kall findMatrikkelenhetMedTeiger og returner svaret som dict.
 
     Args:
