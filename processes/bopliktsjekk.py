@@ -7,6 +7,11 @@ Fremgangsmåte:
   3. Hvis full boplikt: returnerer boplikt=ja uten å hente geometri.
   4. Hvis delvis boplikt: henter teiggeometri fra Matrikkel-API og gjør romlig sjekk mot bopliktområder.
 
+Parametre:
+    - kommunenummer (str): Kommunenummer (4 siffer, f.eks. '3024')
+    - gardsnummer (int): Gårdsnummer
+    - bruksnummer (int): Bruksnummer
+
 Returnerer:
     - dict: boplikt (ja/nei/delvis) og materielle vilkår
 """
@@ -57,20 +62,6 @@ PROCESS_METADATA = {
             "minOccurs": 1,
             "maxOccurs": 1,
         },
-        "festenummer": {
-            "title": "Festenummer",
-            "description": "Festenummer, 0 hvis ingen",
-            "schema": {"type": "integer"},
-            "minOccurs": 0,
-            "maxOccurs": 1,
-        },
-        "seksjonsnummer": {
-            "title": "Seksjonsnummer",
-            "description": "Seksjonsnummer, 0 hvis ingen",
-            "schema": {"type": "integer"},
-            "minOccurs": 0,
-            "maxOccurs": 1,
-        },
     },
     "outputs": BOPLIKTSJEKK_OUTPUT,
     "example": {
@@ -98,8 +89,6 @@ class BopliktSjekkProcessor(BaseProcessor):
         kommunenummer = data.get("kommunenummer")
         gardsnummer = data.get("gardsnummer")
         bruksnummer = data.get("bruksnummer")
-        festenummer = data.get("festenummer", 0)
-        seksjonsnummer = data.get("seksjonsnummer", 0)
 
         if not kommunenummer or gardsnummer is None or bruksnummer is None:
             raise ProcessorExecuteError(
@@ -130,8 +119,6 @@ class BopliktSjekkProcessor(BaseProcessor):
             kommunenummer,
             gardsnummer,
             bruksnummer,
-            festenummer,
-            seksjonsnummer,
         )
 
         if geom is None:

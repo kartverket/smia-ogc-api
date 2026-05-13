@@ -53,7 +53,7 @@ def create_matrikkel_client(wsdl=None):
 
 
 def hent_matrikkelenhet_med_teiger(
-    client, kommunenummer, gardsnummer, bruksnummer, festenummer, seksjonsnummer
+    client, kommunenummer, gardsnummer, bruksnummer
 ):
     """Kall findMatrikkelenhetMedTeiger og returner svaret som dict.
 
@@ -62,8 +62,6 @@ def hent_matrikkelenhet_med_teiger(
         kommunenummer (str): Kommunenummer (4 siffer).
         gardsnummer (int): Gardsnummer.
         bruksnummer (int): Bruksnummer.
-        festenummer (int): Festenummer.
-        seksjonsnummer (int): Seksjonsnummer.
 
     Returns:
         dict: Deserialisert SOAP-respons.
@@ -71,19 +69,20 @@ def hent_matrikkelenhet_med_teiger(
     Raises:
         ProcessorExecuteError: Ved SOAP-feil eller nettverksfeil mot Matrikkel.
     """
+    EPSG_25833_VALUE = 11
     try:
         result = client.service.findMatrikkelenhetMedTeiger(
             matrikkelenhetIdent={
                 "kommuneIdent": {"kommunenummer": kommunenummer},
                 "gardsnummer": int(gardsnummer),
                 "bruksnummer": int(bruksnummer),
-                "festenummer": int(festenummer),
-                "seksjonsnummer": int(seksjonsnummer),
+                "festenummer": 0,
+                "seksjonsnummer": 0,
             },
             matrikkelContext={
                 "locale": "no_NO_B",
                 "brukOriginaleKoordinater": False,
-                "koordinatsystemKodeId": {"value": 11},  # EPSG:25833
+                "koordinatsystemKodeId": {"value": EPSG_25833_VALUE},
                 "systemVersion": "4.25.0.0",
                 "klientIdentifikasjon": "ogc-api",
                 "snapshotVersion": {"timestamp": "9999-01-01T00:00:00+01:00"},

@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def hent_teiggeometri(
-    client, kommunenummer, gardsnummer, bruksnummer, festenummer=0, seksjonsnummer=0
+    client, kommunenummer, gardsnummer, bruksnummer
 ):
     """Hent teiggeometri fra Matrikkel-API og returner som GeoJSON.
 
@@ -20,8 +20,6 @@ def hent_teiggeometri(
         kommunenummer (str): Kommunenummer (4 siffer).
         gardsnummer (int): Gardsnummer.
         bruksnummer (int): Bruksnummer.
-        festenummer (int): Festenummer, 0 hvis ingen.
-        seksjonsnummer (int): Seksjonsnummer, 0 hvis ingen.
 
     Returns:
         tuple: (geom, hjelpelinjetyper, validation, har_bue) der geom er GeoJSON-dict
@@ -37,8 +35,6 @@ def hent_teiggeometri(
         kommunenummer,
         gardsnummer,
         bruksnummer,
-        festenummer,
-        seksjonsnummer,
     )
     geom, hjelpelinjetyper, har_bue = _extract_geometry(result_dict)
 
@@ -48,8 +44,8 @@ def hent_teiggeometri(
             kommunenummer,
             gardsnummer,
             bruksnummer,
-            festenummer,
-            seksjonsnummer,
+            0,
+            0,
         )
 
     validation = _validate_geometry(geom)
@@ -59,8 +55,8 @@ def hent_teiggeometri(
             kommunenummer,
             gardsnummer,
             bruksnummer,
-            festenummer,
-            seksjonsnummer,
+            0,
+            0,
             validation["reason"],
         )
     return geom, sorted(hjelpelinjetyper), validation, har_bue
