@@ -33,10 +33,10 @@ pygeoapi registrerer prosessorer i `pygeoapi-config.yml`:
 
 ```yaml
 resources:
-    bopliktsjekk:
-        type: process
-        processor:
-            name: processes.bopliktsjekk.BopliktSjekkProcessor
+  bopliktsjekk:
+    type: process
+    processor:
+      name: processes.bopliktsjekk.BopliktSjekkProcessor
 ```
 
 Alle prosessorer følger dette mønsteret:
@@ -57,6 +57,7 @@ class BopliktSjekkProcessor(BaseProcessor):
 ```
 
 OGC API-standarden eksponerer prosessen på:
+
 - `GET /processes/bopliktsjekk` — metadata
 - `POST /processes/bopliktsjekk/execution` — kjør
 
@@ -65,7 +66,7 @@ OGC API-standarden eksponerer prosessen på:
 ## 3. Flyt i bopliktsjekk.py
 
 ```
-Input: { kommunenummer, gardsnummer, bruksnummer, [festenummer], [seksjonsnummer] }
+Input: { kommunenummer, gardsnummer, bruksnummer }
 
 Step 1: sjekk_kommune_boplikt(kommunenummer)
         │
@@ -114,8 +115,8 @@ client.service.findMatrikkelenhetMedTeiger(
         "kommuneIdent": {"kommunenummer": kommunenummer},
         "gardsnummer":   int(gardsnummer),
         "bruksnummer":   int(bruksnummer),
-        "festenummer":   int(festenummer),
-        "seksjonsnummer": int(seksjonsnummer),
+        "festenummer":   0,
+        "seksjonsnummer": 0,
     },
     matrikkelContext={
         "koordinatsystemKodeId": {"value": 11},  # ← 11 = UTM33N (EPSG:25833)
@@ -146,7 +147,7 @@ Polygon-ringen er eksplisitt definert i teig-objektet via `flate.exterior.curveD
 
 ---
 
-## 5. Geometribygging — _extract_geometry()
+## 5. Geometribygging — \_extract_geometry()
 
 **Fil:** `processes/utils/matrikkel_geometry.py`, funksjon `_extract_geometry()`
 
@@ -154,11 +155,11 @@ Polygon-ringen er eksplisitt definert i teig-objektet via `flate.exterior.curveD
 
 En grenselinjer i Matrikkel kan være én av tre geometriske typer:
 
-| Type | Beskrivelse | Felt i API-svaret |
-|------|-------------|-------------------|
-| **Linjestykke** | Rett linje mellom start- og endepunkt | `kurve.startpunktId`, `kurve.endpunktId` |
-| **Bue** | Sirkelbue mellom to punkt, med et tredje punkt som definerer buen | `kurve.buepunktX/Y/Z` |
-| **Kurve** | Frekurve med flere mellompunkter (naturlige terrengdetaljer) | `kurve.kurvepunkter` |
+| Type            | Beskrivelse                                                       | Felt i API-svaret                        |
+| --------------- | ----------------------------------------------------------------- | ---------------------------------------- |
+| **Linjestykke** | Rett linje mellom start- og endepunkt                             | `kurve.startpunktId`, `kurve.endpunktId` |
+| **Bue**         | Sirkelbue mellom to punkt, med et tredje punkt som definerer buen | `kurve.buepunktX/Y/Z`                    |
+| **Kurve**       | Frekurve med flere mellompunkter (naturlige terrengdetaljer)      | `kurve.kurvepunkter`                     |
 
 > **Nåværende implementasjon:** Vi håndterer **linjestykker**, **kurver** (kurvepunkter)
 > og **buer** (buepunktet brukes som et mellompunkt, ikke som en ekte sirkelbue).
@@ -202,7 +203,7 @@ curveDirection  grenselinjeId   signed   start        end          traversert so
 
 Alle 11 kanter kobler seg perfekt til en lukket ring.
 
-### Algoritmen i _extract_geometry()
+### Algoritmen i \_extract_geometry()
 
 **Fase 1 — Bygg oppslagstabeller**
 
@@ -257,6 +258,7 @@ return {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]}, hjelpel
 ```
 
 Funksjonen returnerer også:
+
 - `hjelpelinjetyper` — set med hjelpelinjetypeId-verdier fra kantene
 - `har_bue` — `True` hvis noen kanter har buegeometri (logges som advarsel)
 
@@ -328,12 +330,12 @@ Eksempel — boplikt=ja:         Eksempel — boplikt=delvis:
 
 Hele systemet bruker **EPSG:25833 (UTM Zone 33N)**:
 
-| Komponent         | Innstilling                          |
-|-------------------|--------------------------------------|
-| Matrikkel API     | `koordinatsystemKodeId = 11`         |
-| PostGIS lagring   | `SRID = 25833`                       |
-| PostGIS-operasjon | `ST_SetSRID(..., 25833)`             |
-| pygeoapi-config   | `storage_crs: EPSG:25833`            |
+| Komponent         | Innstilling                  |
+| ----------------- | ---------------------------- |
+| Matrikkel API     | `koordinatsystemKodeId = 11` |
+| PostGIS lagring   | `SRID = 25833`               |
+| PostGIS-operasjon | `ST_SetSRID(..., 25833)`     |
+| pygeoapi-config   | `storage_crs: EPSG:25833`    |
 
 **Unngå `koordinatsystemKodeId = 10`** — det er UTM32N og vil gi koordinater som ikke matcher bopliktdatabasen.
 
@@ -347,22 +349,22 @@ Matrikkel-kanter kan ha en `hjelpelinjetypeId` — en kode som sier noe om grens
 
 ## 9. Feilhåndtering
 
-| Situasjon | Håndtering |
-|-----------|------------|
-| Matrikkelenheten finnes ikke | SOAP fault → `ProcessorExecuteError` med norsk feilmelding |
-| Nettverksfeil mot Matrikkel | Exception fanget → feilmelding |
-| Ingen geometri i svaret | `_extract_geometry` returnerer `None` → feilmelding |
-| DB-feil | Exception fanget, logget, re-raised som `ProcessorExecuteError` |
+| Situasjon                    | Håndtering                                                      |
+| ---------------------------- | --------------------------------------------------------------- |
+| Matrikkelenheten finnes ikke | SOAP fault → `ProcessorExecuteError` med norsk feilmelding      |
+| Nettverksfeil mot Matrikkel  | Exception fanget → feilmelding                                  |
+| Ingen geometri i svaret      | `_extract_geometry` returnerer `None` → feilmelding             |
+| DB-feil                      | Exception fanget, logget, re-raised som `ProcessorExecuteError` |
 
 ---
 
 ## Relevante filer
 
-| Fil | Ansvar |
-|-----|--------|
-| `processes/bopliktsjekk.py`                  | OGC-prosess, koordinerer flyten |
-| `processes/utils/matrikkel_client.py`                  | Matrikkel SOAP-klient |
-| `processes/utils/matrikkel_geometry.py`                | Geometribygging fra Matrikkel-respons |
-| `processes/utils/boplikt_db.py`                    | PostGIS-spørringer, boplikt-sjekk |
-| `pygeoapi-config.yml`                        | Prosess-registrering, server-config |
-| `deploy/entrypoint.py`                       | Flask-app, API-nøkkel-validering |
+| Fil                                     | Ansvar                                |
+| --------------------------------------- | ------------------------------------- |
+| `processes/bopliktsjekk.py`             | OGC-prosess, koordinerer flyten       |
+| `processes/utils/matrikkel_client.py`   | Matrikkel SOAP-klient                 |
+| `processes/utils/matrikkel_geometry.py` | Geometribygging fra Matrikkel-respons |
+| `processes/utils/boplikt_db.py`         | PostGIS-spørringer, boplikt-sjekk     |
+| `pygeoapi-config.yml`                   | Prosess-registrering, server-config   |
+| `deploy/entrypoint.py`                  | Flask-app, API-nøkkel-validering      |
