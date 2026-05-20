@@ -12,30 +12,30 @@ BOPLIKTSJEKK_OUTPUT = {
                     "description": "Om geometrien er i et bopliktområde. JA = helt innenfor, NEI = utenfor, DELVIS = delvis innenfor.",
                     "enum": ["JA", "NEI", "DELVIS"],
                 },
-                "bebygdEiendom": {
+                "gjelderForBruktSomHelarsbolig": {
                     "type": "boolean",
-                    "description": "Nedsatt konsesjonsgrense for bopliktområdet gjelder for bebygd eiendom som er eller har vært i bruk som helårsbolig.",
+                    "description": "Angir om nedsatt konsesjonsgrense med boplikt gjelder for bebygd eiendom som er eller har vært brukt som helårsbolig.",
                 },
-                "ikkeHelarsboligUnderOppforing": {
+                "gjelderForBoligIkkeTattIBruk": {
                     "type": "boolean",
-                    "description": "Nedsatt konsesjonsgrense for bopliktområdet gjelder for eiendom med bebyggelse som ikke er tatt i bruk som helårsbolig, herunder eiendom under oppføring regulert til boligformål.",
+                    "description": "Angir om nedsatt konsesjonsgrense med boplikt gjelder for bolig under oppføring eller bolig som ikke er tatt i bruk som helårsbolig.",
                 },
-                "ubebygdTomt": {
+                "gjelderForUbebygdBoligtomt": {
                     "type": "boolean",
-                    "description": "Nedsatt konsesjonsgrense for bopliktområdet gjelder for ubebygd tomt regulert til boligformål.",
+                    "description": "Angir om nedsatt konsesjonsgrense med boplikt gjelder for ubebygd tomt regulert til boligformål.",
                 },
-                "unntakFraSlektskapsunntak": {
+                "harUnntakFraSlektskapsunntak": {
                     "type": "boolean",
-                    "description": "Angir om det er innført unntak fra slektskapsunntaket.",
+                    "description": "Angir om kommunen har innført unntak fra slektskapsunntaket.",
                 },
-                "andreAvgrensninger": {
+                "andreLokaleAvgrensninger": {
                     "type": "string",
                     "nullable": True,
-                    "description": "Andre materielle avgrensninger gitt i lokal bopliktforskrift.",
+                    "description": "Andre lokale begrensninger eller vilkår som ikke dekkes av de andre feltene.",
                 },
-                "usikkerAvgrensning": {
+                "harUsikkerAvgrensning": {
                     "type": "boolean",
-                    "description": "Angir hvorvidt bopliktområdets geometriske representasjon er entydig definert. Dersom usikker (true) må det manuelt vurderes i tråd med forskriftens materielle vilkår.",
+                    "description": "Angir om bopliktsområdets geometriske avgrensning er usikker og må vurderes manuelt i tråd med forskriften. Verdi = True: Avgrensningen er usikker. Verdi = False: Avgrensningen er ikke usikker.",
                 },
             },
         },

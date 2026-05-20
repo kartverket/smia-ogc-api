@@ -25,12 +25,12 @@ _VILKAAR_COLUMNS = [
 ]
 
 _VILKAAR_RENAME = {
-    "bebygd_eiendom": "bebygdEiendom",
-    "helaarsbolig": "ikkeHelarsboligUnderOppforing",
-    "ubebygd_tomt": "ubebygdTomt",
-    "slektskapsunntak": "unntakFraSlektskapsunntak",
-    "andre_avgrensninger": "andreAvgrensninger",
-    "usikker_avgrensning": "usikkerAvgrensning",
+    "bebygd_eiendom": "gjelderForBruktSomHelarsbolig",
+    "helaarsbolig": "gjelderForBoligIkkeTattIBruk",
+    "ubebygd_tomt": "gjelderForUbebygdBoligtomt",
+    "slektskapsunntak": "harUnntakFraSlektskapsunntak",
+    "andre_avgrensninger": "andreLokaleAvgrensninger",
+    "usikker_avgrensning": "harUsikkerAvgrensning",
 }
 
 _ALL_COLUMNS = _KOMMUNE_COLUMNS + _VILKAAR_COLUMNS
