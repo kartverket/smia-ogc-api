@@ -24,6 +24,10 @@ _VILKAAR_COLUMNS = [
     "usikker_avgrensning",
 ]
 
+# TODO:
+# Midlertidig mapping fra dagens databasenavn til API-feltnavn
+# brukt i OGC Processes. Planen er å renavne feltene i databasen senere,
+# slik at både OGC Processes og OGC Features kan eksponere samme feltnavn.
 _VILKAAR_RENAME = {
     "bebygd_eiendom": "gjelderForBruktSomHelarsbolig",
     "helaarsbolig": "gjelderForBoligIkkeTattIBruk",
@@ -37,6 +41,12 @@ _ALL_COLUMNS = _KOMMUNE_COLUMNS + _VILKAAR_COLUMNS
 
 
 def _gjelder_to_bool(value):
+    """
+    TODO:
+    Midlertidig kompatibilitet: DB har tekstverdier som
+    representerer bool. Disse konverteres i API-laget inntil feltene
+    er migrert til boolske verdier i databasen.
+    """
     if isinstance(value, str):
         return value.lower() == "gjelder"
     return bool(value)
@@ -49,6 +59,7 @@ def _map_vilkaar(row_dict):
         if db_col in ("andre_avgrensninger", "usikker_avgrensning"):
             result[api_name] = val
         else:
+            # TODO: Fix dette når databasemodellen er migrert til boolske verdier
             result[api_name] = _gjelder_to_bool(val)
     return result
 
