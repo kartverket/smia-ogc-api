@@ -219,7 +219,7 @@ info:
     url: ' '
   termsOfService: ' '
   title: Administrative Inndelinger
-  version: 0.22.0
+  version: 1.0.0
   x-keywords:
   - boplikt
 openapi: 3.0.2
@@ -745,14 +745,33 @@ paths:
             application/json:
               schema: &id003
                 properties:
-                  andreAvgrensninger:
-                    description: Andre materielle avgrensninger gitt i lokal bopliktforskrift.
+                  andreLokaleAvgrensninger:
+                    description: "Andre lokale begrensninger eller vilk\xE5r som ikke\
+                      \ dekkes av de andre feltene."
                     nullable: true
                     type: string
-                  bebygdEiendom:
-                    description: "Nedsatt konsesjonsgrense for bopliktomr\xE5det gjelder\
-                      \ for bebygd eiendom som er eller har v\xE6rt i bruk som hel\xE5\
+                  gjelderForBoligIkkeTattIBruk:
+                    description: "Angir om nedsatt konsesjonsgrense med boplikt gjelder\
+                      \ for bolig under oppf\xF8ring eller bolig som ikke er tatt\
+                      \ i bruk som hel\xE5rsbolig."
+                    type: boolean
+                  gjelderForBruktSomHelarsbolig:
+                    description: "Angir om nedsatt konsesjonsgrense med boplikt gjelder\
+                      \ for bebygd eiendom som er eller har v\xE6rt brukt som hel\xE5\
                       rsbolig."
+                    type: boolean
+                  gjelderForUbebygdBoligtomt:
+                    description: "Angir om nedsatt konsesjonsgrense med boplikt gjelder\
+                      \ for ubebygd tomt regulert til boligform\xE5l."
+                    type: boolean
+                  harUnntakFraSlektskapsunntak:
+                    description: "Angir om kommunen har innf\xF8rt unntak fra slektskapsunntaket."
+                    type: boolean
+                  harUsikkerAvgrensning:
+                    description: "Angir om bopliktsomr\xE5dets geometriske avgrensning\
+                      \ er usikker og m\xE5 vurderes manuelt i tr\xE5d med forskriften.\
+                      \ Verdi = True: Avgrensningen er usikker. Verdi = False: Avgrensningen\
+                      \ er ikke usikker."
                     type: boolean
                   iBopliktomrade:
                     description: "Om geometrien er i et bopliktomr\xE5de. JA = helt\
@@ -762,24 +781,6 @@ paths:
                     - NEI
                     - DELVIS
                     type: string
-                  ikkeHelarsboligUnderOppforing:
-                    description: "Nedsatt konsesjonsgrense for bopliktomr\xE5det gjelder\
-                      \ for eiendom med bebyggelse som ikke er tatt i bruk som hel\xE5\
-                      rsbolig, herunder eiendom under oppf\xF8ring regulert til boligform\xE5\
-                      l."
-                    type: boolean
-                  ubebygdTomt:
-                    description: "Nedsatt konsesjonsgrense for bopliktomr\xE5det gjelder\
-                      \ for ubebygd tomt regulert til boligform\xE5l."
-                    type: boolean
-                  unntakFraSlektskapsunntak:
-                    description: "Angir om det er innf\xF8rt unntak fra slektskapsunntaket."
-                    type: boolean
-                  usikkerAvgrensning:
-                    description: "Angir hvorvidt bopliktomr\xE5dets geometriske representasjon\
-                      \ er entydig definert. Dersom usikker (true) m\xE5 det manuelt\
-                      \ vurderes i tr\xE5d med forskriftens materielle vilk\xE5r."
-                    type: boolean
                 type: object
           description: Process output schema
         '201':
@@ -842,7 +843,7 @@ servers:
     \ og kan endres p\xE5 kort varsel. Dataendepunkter krever autentisering med API-n\xF8\
     kkel i X-API-Key-header, f.eks: curl -H 'X-API-Key: din-n\xF8kkel'. Tilbakemeldinger\
     \ mottas gjerne p\xE5 e-post til kontaktperson."
-  url: http://localhost:5000
+  url: http://localhost:5000/v1
 tags:
 - description: "OGC API for Administrative Inndelinger. NB: APIet er under testing\
     \ og kan endres p\xE5 kort varsel. Dataendepunkter krever autentisering med API-n\xF8\
