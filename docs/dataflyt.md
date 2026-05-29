@@ -8,7 +8,7 @@ Bopliktområder synkroniseres én gang per natt fra nibas via Dataplattformen in
 flowchart TD
     nibas["nibas-backend"]
     exporter["nibas-data-exporter"]
-    landing["GCS bøtte: landing_zone)"]
+    landing["GCS bøtte: landing_zone"]
     dp["Dataplattform: arrival → bronze → silver"]
     silver["GCS bøtte: smia-silver"]
     import["kommuneinfo-import hver natt"]

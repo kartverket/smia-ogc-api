@@ -6,7 +6,8 @@ Dette dokumentet forklarer hvordan bopliktsjekken med matrikkelnummer fungerer, 
 
 ## 1. Systemarkitektur
 
-```Klient
+```text
+Klient
   │
   │  POST /v1/processes/bopliktsjekk/execution
   │  { kommunenummer, gardsnummer, bruksnummer, ... }
@@ -64,7 +65,8 @@ OGC API-standarden eksponerer prosessen på:
 
 ## 3. Flyt i bopliktsjekk.py
 
-```Input: { kommunenummer, gardsnummer, bruksnummer }
+```text
+Input: { kommunenummer, gardsnummer, bruksnummer }
 
 Step 1: sjekk_kommune_boplikt(kommunenummer)
         │
@@ -125,7 +127,7 @@ client.service.findMatrikkelenhetMedTeiger(
 )
 ```
 
-> **KRITISK:** `koordinatsystemKodeId = 11` betyr UTM33N (EPSG:25833).
+> `koordinatsystemKodeId = 11` betyr UTM33N (EPSG:25833).
 > Bruk av `10` (UTM32N) er FEIL og vil gi koordinater i feil projeksjons-sone.
 > PostGIS-databasen lagrer bopliktområder i SRID 25833 — koordinatsystemene må matche.
 
@@ -133,7 +135,8 @@ client.service.findMatrikkelenhetMedTeiger(
 
 Svaret er en flat liste (`bubbleObjects.item`) med alle objekter blandet:
 
-```bubbleObjects.item (flat liste, 24 objekter for en enkel eiendom):
+```text
+bubbleObjects.item (flat liste, 24 objekter for en enkel eiendom):
   ├── matrikkelenhet     ← metadata (gardsnummer, bruksnummer, uuid, osv.)
   ├── teig               ← har "flate" → selve polygon-definisjonen
   ├── grenselinjer (×N)  ← har "kurve" med startpunktId / endpunktId
@@ -181,13 +184,15 @@ En grenselinjer i Matrikkel kan være én av tre geometriske typer:
 
 Hvert element refererer til en kant og sier hvilken retning den skal traverseres:
 
-```signed=False → traverser kanten BAKLENGS: endpunktId → startpunktId
+```text
+signed=False → traverser kanten BAKLENGS: endpunktId → startpunktId
 signed=True  → traverser kanten fremover: startpunktId → endpunktId
 ```
 
 ### Eksempel fra respons (4203/306/21)
 
-```curveDirection  grenselinjeId   signed   start        end          traversert som
+```text
+curveDirection  grenselinjeId   signed   start        end          traversert som
 [ 1]            234367975       False    234367971    234367974    234367974 → 234367971  ✓
 [ 2]            234367972       False    234364438    234367971    234367971 → 234364438  ✓
 [ 3]            234367984       False    234367981    234364438    234364438 → 234367981  ✓
@@ -228,7 +233,8 @@ def build_ring(curve_directions):
 
 Hver kant kan være enten en rett linje (kun start- og endepunkt) eller en kurve (med ekstra punkter mellom). En polygon kan inneholde en blanding av begge typer.
 
-```Visuelt for eksempeleiendommen:
+```text
+Visuelt for eksempeleiendommen:
 
   234367974 ────── 234367971
   /                         \
@@ -296,16 +302,18 @@ AND kommunenummer = %s
 
 ### Statustolkning
 
-```Ingen treff fra ST_Intersects  →  boplikt: "nei"
+```text
+Ingen treff fra ST_Intersects  →  iBopliktomrade: "NEI"
 
-Alle treff har is_within=true og nøyaktig ett treff  →  boplikt: "ja"
+Alle treff har is_within=true og nøyaktig ett treff  →  iBopliktomrade: "JA"
 (geometrien ligger helt inni ett bopliktområde)
 
-Flere treff eller minst ett treff med is_within=false  →  boplikt: "delvis"
+Flere treff eller minst ett treff med is_within=false  →  iBopliktomrade: "DELVIS"
 (geometrien overlapper flere områder eller krysser grense)
 ```
 
-```Eksempel — boplikt=ja:         Eksempel — boplikt=delvis:
+```text
+Eksempel — iBopliktomrade=JA:         Eksempel — iBopliktomrade=DELVIS:
 
   ┌──────────────────┐           ┌──────────────────┐
   │  Bopliktområde   │           │  Bopliktområde   │

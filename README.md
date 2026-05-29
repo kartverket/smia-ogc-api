@@ -1,4 +1,4 @@
-# Administrative inndeling OGC API
+# Administrative inndelinger OGC API
 
 OGC API for Administrative inndelinger bygd med [pygeoapi](https://pygeoapi.io/).
 Tjenesten deler data fra Kartverket som OGC API Features og tilbyr en OGC API Process
