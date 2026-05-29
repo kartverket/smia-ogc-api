@@ -1,10 +1,10 @@
 # Reporting a Vulnerability
 
-We encourage responsible disclosure of security vulnerabilities. If you find something suspicious, we encourage and appreciate your report!
+We encourage responsible disclosure of security vulnerabilities. If you find something suspicious, we appreciate your report.
 
 ## Ways to report
 
-This repository has enabled Github Private Vulnerability Reporting. DO NOT Use public issues if you've found a vulnerability.
-[Report a issue](https://github.com/kartverket/smia-ogc-api/security/advisories/new)
+This repository has enabled GitHub Private Vulnerability Reporting. Do not use public issues if you have found a vulnerability.
+[Report an issue](https://github.com/kartverket/smia-ogc-api/security/advisories/new)
 
-If you are absolutely unable to or have strong reasons not to use GitHub's vulnerability reporting workflow, please reach out to the Kartverkets security team at <cybersikkerhet@kartverket.no>
+If you are unable to use GitHub's vulnerability reporting workflow, please contact Kartverket's security team at <cybersikkerhet@kartverket.no>.
