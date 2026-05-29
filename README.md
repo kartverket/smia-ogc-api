@@ -1,12 +1,14 @@
-# Boplikt OGC API
+# Administrative inndelinger OGC API
 
-OGC API Features-tjeneste for bopliktområder, bygd med [pygeoapi](https://pygeoapi.io/).
+OGC API for Administrative inndelinger bygd med [pygeoapi](https://pygeoapi.io/).
+Tjenesten deler data fra Kartverket som OGC API Features og tilbyr en OGC API Process
+for bopliktsjekk — sjekk om en eiendom eller geometri ligger innenfor et bopliktområde.
 
 ## Oppsett
 
 ### 1. Installer uv
 
-Se docs: https://docs.astral.sh/uv/
+Se docs: <https://docs.astral.sh/uv/>
 
 ### 2. Installer avhengigheter
 
@@ -22,7 +24,7 @@ Dette installerer riktig Python-versjon (3.12+) og alle avhengigheter.
 ./run_local.sh
 ```
 
-Serveren starter på http://localhost:5000.
+Serveren starter på <http://localhost:5000>.
 
 Scriptet gjør to ting:
 

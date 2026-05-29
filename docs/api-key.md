@@ -12,15 +12,15 @@ Hvis `OGC_API_KEY` ikke er satt (tom streng eller mangler), returnerer alle besk
 
 ### Åpne endepunkter (krever ikke nøkkel)
 
-- `/` — landingsside
-- `/openapi` — OpenAPI-spec og Swagger UI
-- `/conformance` — OGC conformance
+- `/v1/` — landingsside
+- `/v1/openapi` — OpenAPI-spec og Swagger UI
+- `/v1/conformance` — OGC conformance
 - `/health` — helsesjekk (k8s-prober)
 
 ### Beskyttede endepunkter (krever nøkkel)
 
-- `/collections/*` — OGC API Features
-- `/processes/*` — prosesser (f.eks. bopliktsjekk)
+- `/v1/collections/*` — OGC API Features
+- `/v1/processes/*` — prosesser (f.eks. bopliktsjekk)
 - Alt annet
 
 ## Bruk
