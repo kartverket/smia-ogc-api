@@ -8,9 +8,9 @@ Bopliktområder synkroniseres én gang per natt fra nibas via Dataplattformen in
 flowchart TD
     nibas["nibas-backend"]
     exporter["nibas-data-exporter"]
-    landing["GCP bøtte: landing_zone)"]
+    landing["GCS bøtte: landing_zone)"]
     dp["Dataplattform: arrival → bronze → silver"]
-    silver["GCP bøtt: smia-silver"]
+    silver["GCS bøtte: smia-silver"]
     import["kommuneinfo-import hver natt"]
     db[("Kommuneinfo database")]
     ogc["smia-ogc-api"]
@@ -28,9 +28,9 @@ flowchart TD
 
 ## Steg for steg
 
-1. **nibas-data-exporter** kaller nibas-backend (`/v1/ekstern/bopliktomraader`) og laster JSON til en GCP landing zone-bøtte.
-2. **Dataplattformen** (Databricks) trigger en jobb ved arrival. Data prosesseres gjennom bronze- og silver-steg, og silver-data skrives som GeoJSON til en ekstern GCP bøtte (`smia-silver/dagens/geojson/bopliktomraader/`).
-3. **kommuneinfo-import** kjører kl. 02:00 hver natt. Leser silver GeoJSON fra GCP bøtta og administrative inndelinger fra smia-silver GCP bøtte. Importerer til en midlertidig schema og gjør en atomisk schema swap. NB! Både dev og prod kommueinfo-import leser fra smia-silver GCP form liggre i databricks prod.
+1. **nibas-data-exporter** kaller nibas-backend (`/v1/ekstern/bopliktomraader`) og laster JSON til en GCS landing zone-bøtte.
+2. **Dataplattformen** trigger en jobb ved arrival. Data prosesseres gjennom bronze- og silver-steg, og silver-data skrives som GeoJSON til en ekstern GCS bøtte (`smia-silver/dagens/geojson/bopliktomraader/`).
+3. **kommuneinfo-import** kjører kl. 02:00 hver natt. Leser silver GeoJSON fra GCS-bøtta og administrative inndelinger fra smia-silver GCS-bøtte. Importerer til et midlertidig schema og gjør en atomisk schema swap. NB! Både dev og prod kommuneinfo-import leser fra smia-silver i Databricks prod.
 4. **smia-ogc-api** leser direkte fra `kommuneinfo.bopliktomraade`-tabellen og eksponerer dataene som OGC API Features + en prosess for bopliktsjekk mot geometri.
 
 ## Viktig å vite

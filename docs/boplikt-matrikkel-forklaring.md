@@ -6,10 +6,9 @@ Dette dokumentet forklarer hvordan bopliktsjekken med matrikkelnummer fungerer, 
 
 ## 1. Systemarkitektur
 
-```
-Klient
+```Klient
   │
-  │  POST /processes/bopliktsjekk/execution
+  │  POST /v1/processes/bopliktsjekk/execution
   │  { kommunenummer, gardsnummer, bruksnummer, ... }
   ▼
 pygeoapi (Flask)
@@ -58,26 +57,25 @@ class BopliktSjekkProcessor(BaseProcessor):
 
 OGC API-standarden eksponerer prosessen på:
 
-- `GET /processes/bopliktsjekk` — metadata
-- `POST /processes/bopliktsjekk/execution` — kjør
+- `GET /v1/processes/bopliktsjekk` — metadata
+- `POST /v1/processes/bopliktsjekk/execution` — kjør
 
 ---
 
 ## 3. Flyt i bopliktsjekk.py
 
-```
-Input: { kommunenummer, gardsnummer, bruksnummer }
+```Input: { kommunenummer, gardsnummer, bruksnummer }
 
 Step 1: sjekk_kommune_boplikt(kommunenummer)
         │
         ▼
         Har kommunen boplikt i det hele tatt?
         │
-        ├── NEI ──→ { boplikt: "nei" }  ← FERDIG (ingen DB-sjekk)
+        ├── NEI ──→ { iBopliktomrade: "NEI" }  ← FERDIG (ingen geometrisjekk)
         │
         └── JA ──→ Har alle bopliktområder full boplikt (delvis_boplikt = false)?
                    │
-                   ├── JA (alle fulle) ──→ { boplikt: "ja", ...vilkår }  ← FERDIG (ingen geometri)
+                   ├── JA (alle fulle) ──→ { iBopliktomrade: "JA", ...vilkår }  ← FERDIG (ingen geometri)
                    │
                    └── NEI (noen delvis) ──→ Hent geometri fra Matrikkel
                                              │
@@ -85,7 +83,7 @@ Step 1: sjekk_kommune_boplikt(kommunenummer)
                                         sjekk_boplikt(geom, kommunenummer)
                                              │
                                              ▼
-                                        { boplikt: "ja/nei/delvis", ...vilkår }
+                               { iBopliktomrade: "JA/NEI/DELVIS", ...vilkår }
 ```
 
 **Viktig optimalisering:** Geometrioppslag mot Matrikkel SOAP er kun nødvendig ved delvis boplikt. Full boplikt betyr hele kommunen er innenfor — ingen grunn til å sjekke koordinater.
@@ -94,7 +92,7 @@ Step 1: sjekk_kommune_boplikt(kommunenummer)
 
 ## 4. Matrikkel SOAP API
 
-Se docs: https://kartverket.github.io/api-dokumentasjon/docs/eiendom/matrikkel/matrikkelen/matrikkelapi/
+Se docs: <https://kartverket.github.io/api-dokumentasjon/docs/eiendom/matrikkel/matrikkelen/matrikkelapi/>
 **Fil:** `processes/utils/matrikkel_client.py`
 
 ### Klienten
@@ -135,8 +133,7 @@ client.service.findMatrikkelenhetMedTeiger(
 
 Svaret er en flat liste (`bubbleObjects.item`) med alle objekter blandet:
 
-```
-bubbleObjects.item (flat liste, 24 objekter for en enkel eiendom):
+```bubbleObjects.item (flat liste, 24 objekter for en enkel eiendom):
   ├── matrikkelenhet     ← metadata (gardsnummer, bruksnummer, uuid, osv.)
   ├── teig               ← har "flate" → selve polygon-definisjonen
   ├── grenselinjer (×N)  ← har "kurve" med startpunktId / endpunktId
@@ -184,15 +181,13 @@ En grenselinjer i Matrikkel kan være én av tre geometriske typer:
 
 Hvert element refererer til en kant og sier hvilken retning den skal traverseres:
 
-```
-signed=False → traverser kanten BAKLENGS: endpunktId → startpunktId
+```signed=False → traverser kanten BAKLENGS: endpunktId → startpunktId
 signed=True  → traverser kanten fremover: startpunktId → endpunktId
 ```
 
-### Eksempel fra virkelig respons (4203/306/21)
+### Eksempel fra respons (4203/306/21)
 
-```
-curveDirection  grenselinjeId   signed   start        end          traversert som
+```curveDirection  grenselinjeId   signed   start        end          traversert som
 [ 1]            234367975       False    234367971    234367974    234367974 → 234367971  ✓
 [ 2]            234367972       False    234364438    234367971    234367971 → 234364438  ✓
 [ 3]            234367984       False    234367981    234364438    234364438 → 234367981  ✓
@@ -205,7 +200,7 @@ Alle 11 kanter kobler seg perfekt til en lukket ring.
 
 ### Algoritmen i \_extract_geometry()
 
-**Fase 1 — Bygg oppslagstabeller**
+#### Fase 1 — Bygg oppslagstabeller
 
 Én enkelt iterasjon over `bubbleObjects.item` kategoriserer alle objekter:
 
@@ -216,7 +211,7 @@ for item in items:
     if "flate"    in item:   → teiger.append(item)
 ```
 
-**Fase 2 — Bygg ring fra curveDirections**
+#### Fase 2 — Bygg ring fra curveDirections
 
 ```python
 def build_ring(curve_directions):
@@ -233,8 +228,7 @@ def build_ring(curve_directions):
 
 Hver kant kan være enten en rett linje (kun start- og endepunkt) eller en kurve (med ekstra punkter mellom). En polygon kan inneholde en blanding av begge typer.
 
-```
-Visuelt for eksempeleiendommen:
+```Visuelt for eksempeleiendommen:
 
   234367974 ────── 234367971
   /                         \
@@ -247,7 +241,7 @@ Visuelt for eksempeleiendommen:
 (11 punkter, koordinater i UTM33N)
 ```
 
-**Fase 3 — Håndter flere teiger**
+#### Fase 3 — Håndter flere teiger
 
 Én teig → `Polygon`. Flere teiger → `MultiPolygon` (én ring per teig).
 
@@ -302,18 +296,16 @@ AND kommunenummer = %s
 
 ### Statustolkning
 
-```
-Ingen treff fra ST_Intersects  →  boplikt: "nei"
+```Ingen treff fra ST_Intersects  →  boplikt: "nei"
 
-Alle treff har is_within=true  →  boplikt: "ja"
-(geometrien ligger helt inni alle overlappende bopliktområder)
+Alle treff har is_within=true og nøyaktig ett treff  →  boplikt: "ja"
+(geometrien ligger helt inni ett bopliktområde)
 
-Minst ett treff har is_within=false  →  boplikt: "delvis"
-(geometrien krysser grensen til et bopliktområde)
+Flere treff eller minst ett treff med is_within=false  →  boplikt: "delvis"
+(geometrien overlapper flere områder eller krysser grense)
 ```
 
-```
-Eksempel — boplikt=ja:         Eksempel — boplikt=delvis:
+```Eksempel — boplikt=ja:         Eksempel — boplikt=delvis:
 
   ┌──────────────────┐           ┌──────────────────┐
   │  Bopliktområde   │           │  Bopliktområde   │
@@ -326,7 +318,7 @@ Eksempel — boplikt=ja:         Eksempel — boplikt=delvis:
 
 ---
 
-## 7. Koordinatsystem — Viktig!
+## 7. Koordinatsystem
 
 Hele systemet bruker **EPSG:25833 (UTM Zone 33N)**:
 
@@ -337,13 +329,11 @@ Hele systemet bruker **EPSG:25833 (UTM Zone 33N)**:
 | PostGIS-operasjon | `ST_SetSRID(..., 25833)`     |
 | pygeoapi-config   | `storage_crs: EPSG:25833`    |
 
-**Unngå `koordinatsystemKodeId = 10`** — det er UTM32N og vil gi koordinater som ikke matcher bopliktdatabasen.
-
 ---
 
 ## 8. Hjelpelinjetyper
 
-Matrikkel-kanter kan ha en `hjelpelinjetypeId` — en kode som sier noe om grensens rettslige status (f.eks. påvist, ikke påvist, midlertidig). Disse samles opp fra grensekantene og returneres i API-svaret som `hjelpelinjetyper: [...]` for informasjonsformål.
+Matrikkel-kanter kan ha en `hjelpelinjetypeId` — en kode som sier noe om grensens rettslige status (f.eks. påvist, ikke påvist, midlertidig). Disse samles opp internt i geometrihentingen for analyse/logging, men returneres ikke i API-responsen fra bopliktsjekk-endepunktet i dagens implementasjon.
 
 ---
 
@@ -355,16 +345,3 @@ Matrikkel-kanter kan ha en `hjelpelinjetypeId` — en kode som sier noe om grens
 | Nettverksfeil mot Matrikkel  | Exception fanget → feilmelding                                  |
 | Ingen geometri i svaret      | `_extract_geometry` returnerer `None` → feilmelding             |
 | DB-feil                      | Exception fanget, logget, re-raised som `ProcessorExecuteError` |
-
----
-
-## Relevante filer
-
-| Fil                                     | Ansvar                                |
-| --------------------------------------- | ------------------------------------- |
-| `processes/bopliktsjekk.py`             | OGC-prosess, koordinerer flyten       |
-| `processes/utils/matrikkel_client.py`   | Matrikkel SOAP-klient                 |
-| `processes/utils/matrikkel_geometry.py` | Geometribygging fra Matrikkel-respons |
-| `processes/utils/boplikt_db.py`         | PostGIS-spørringer, boplikt-sjekk     |
-| `pygeoapi-config.yml`                   | Prosess-registrering, server-config   |
-| `deploy/entrypoint.py`                  | Flask-app, API-nøkkel-validering      |
