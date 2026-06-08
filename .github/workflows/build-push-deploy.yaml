@@ -4,6 +4,8 @@ name: Build, push and deploy to ArgoCD
 #     branches: ["main"]
 on:
   workflow_dispatch:
+  push:
+    branches: ["TS-2944-oppdater-deploy"]
 
 
 env:
