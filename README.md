@@ -6,7 +6,7 @@ eiendom eller geometri ligger innenfor et bopliktområde.
 
 ## Oppsett
 
-### Pre requs
+### Forutsetninger
 
 - [uv](https://docs.astral.sh/uv/) (Python 3.12, styres av `.python-version`)
 - Docker med Compose
