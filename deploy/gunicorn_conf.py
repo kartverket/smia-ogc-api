@@ -1,9 +1,14 @@
 import datetime
 import logging
+import os
 import sys
 
 import json_log_formatter
 from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
+
+bind = f"{os.environ.get('CONTAINER_HOST', '0.0.0.0')}:{os.environ.get('CONTAINER_PORT', '5000')}"
+workers = int(os.environ.get("WSGI_WORKERS", "4"))
+worker_class = os.environ.get("WSGI_WORKER_CLASS", "gevent")
 
 accesslog = "-"
 errorlog = "-"
