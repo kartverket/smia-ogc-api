@@ -44,8 +44,9 @@ Dette starter to tjenester:
 | Tjeneste | Adresse                 | Beskrivelse                   |
 | -------- | ----------------------- | ----------------------------- |
 | `api`    | <http://localhost:5000> | OGC API (pygeoapi + gunicorn) |
-| `api`    | <http://localhost:8181> | Prometheus-metrikker          |
 | `db`     | `localhost:5432`        | PostGIS med mockdata          |
+
+Prometheus-metrikker er tilgjengelig på <http://localhost:8181>.
 
 Databasen og API-et er forhåndskonfigurert med brukeren `boplikt` og API-nøkkelen settes til
 `testkey` lokalt. Disse verdiene ligger i `compose.yaml` og trenger ikke å endres for lokal
