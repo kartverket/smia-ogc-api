@@ -1,8 +1,15 @@
 version: 2
 
+registries:
+  docker-hardened-images:
+    type: docker-registry
+    url: dhi.io
+    username: ${{secrets.DOCKERHUB_USERNAME}}
+    password: ${{secrets.DOCKERHUB_TOKEN}}
+
 updates:
-  - package-ecosystem: "pip"
-    directory: "/deploy"
+  - package-ecosystem: "uv"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -26,8 +33,13 @@ updates:
 
   - package-ecosystem: "docker"
     directory: "/deploy"
+    registries:
+      - "docker-hardened-images"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "03:59"
       timezone: "Europe/Oslo"
+    ignore:
+      - dependency-name: "dhi.io/python"
+        versions: [">= 3.13"]
