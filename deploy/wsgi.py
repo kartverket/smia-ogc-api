@@ -12,6 +12,8 @@ API_KEY = os.environ.get("OGC_API_KEY")
 
 OPEN_PATHS = {"/v1/", "/v1", "/v1/openapi", "/v1/conformance", "/health"}
 
+metrics = GunicornPrometheusMetrics(app)
+
 
 @app.before_request
 def check_api_key():
@@ -47,9 +49,6 @@ def set_security_headers(response):
     response.headers.pop("X-Powered-By", None)
     response.headers.pop("Server", None)
     return response
-
-
-metrics = GunicornPrometheusMetrics(app)
 
 
 @app.route("/health")
