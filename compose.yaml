@@ -1,0 +1,50 @@
+
+services:
+  db:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: boplikt
+      POSTGRES_USER: boplikt
+      POSTGRES_PASSWORD: boplikt
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./dev/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boplikt -d boplikt"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: boplikt
+      DB_USER: boplikt
+      DB_PASSWORD: boplikt
+      PYGEOAPI_URL: http://localhost:5000
+      OGC_API_KEY: testkey
+      MATRIKKELEN_USERNAME: ${MATRIKKELEN_USERNAME:-}
+      MATRIKKELEN_PASSWORD: ${MATRIKKELEN_PASSWORD:-}
+    ports:
+      - "5000:5000"
+      - "8181:8181"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./processes
+        - action: rebuild
+          path: ./pygeoapi-config.yml
+        - action: rebuild
+          path: ./deploy
+        - action: rebuild
+          path: ./pyproject.toml
+        - action: rebuild
+          path: ./uv.lock

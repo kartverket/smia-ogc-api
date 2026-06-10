@@ -6,7 +6,7 @@ API-nøkkelen er en midlertidig løsning for testperioden med LDIR. Når APIet e
 
 ## Hvordan det fungerer
 
-Middleware i `deploy/entrypoint.py` sjekker env-variabelen `OGC_API_KEY`. Hvis den er satt, kreves en gyldig API-nøkkel i `X-API-Key`-headeren for alle forespørsler unntatt åpne endepunkter.
+Middleware i `deploy/wsgi.py` sjekker env-variabelen `OGC_API_KEY`. Hvis den er satt, kreves en gyldig API-nøkkel i `X-API-Key`-headeren for alle forespørsler unntatt åpne endepunkter.
 
 Hvis `OGC_API_KEY` ikke er satt (tom streng eller mangler), returnerer alle beskyttede endepunkter `503 Service Unavailable`.
 
