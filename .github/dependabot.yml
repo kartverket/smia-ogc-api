@@ -42,4 +42,10 @@ updates:
       timezone: "Europe/Oslo"
     ignore:
       - dependency-name: "dhi.io/python"
-        versions: [">= 3.13"]
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "python"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
