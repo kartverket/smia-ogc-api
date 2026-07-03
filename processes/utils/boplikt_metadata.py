@@ -2,7 +2,6 @@
 
 from processes.utils.boplikt_db import Column
 
-
 BOPLIKTSJEKK_OUTPUT = {
     "resultat": {
         "title": "Bopliktsjekk-resultat",

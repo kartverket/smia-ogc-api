@@ -3,11 +3,11 @@
 import json
 import logging
 import os
+from enum import StrEnum
 
 from psycopg2 import InterfaceError, OperationalError
 from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
-from enum import StrEnum
 
 LOGGER = logging.getLogger(__name__)
 class Column(StrEnum):
