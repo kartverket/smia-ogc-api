@@ -7,67 +7,34 @@ import os
 from psycopg2 import InterfaceError, OperationalError
 from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
+from enum import StrEnum
 
 LOGGER = logging.getLogger(__name__)
+class Column(StrEnum):
+    KOMMUNENUMMER = "kommunenummer"
+    GJELDER_KUN_DEL_AV_KOMMUNEN = "gjelderKunDelAvKommunen"
+    GJELDER_FOR_BRUKT_SOM_HELARSBOLIG = "gjelderForBruktSomHelarsbolig"
+    GJELDER_FOR_BOLIG_IKKE_TATT_I_BRUK = "gjelderForBoligIkkeTattIBruk"
+    GJELDER_FOR_UBEBYGD_BOLIGTOMT = "gjelderForUbebygdBoligtomt"
+    HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK = "harUnntakFraSlektskapsunntak"
+    ANDRE_LOKALE_AVGRENSNINGER = "andreLokaleAvgrensninger"
+    HAR_USIKKER_AVGRENSNING = "harUsikkerAvgrensning"
 
-_KOMMUNE_COLUMNS = [
-    "kommunenummer",
-    "delvis_boplikt",
+_COLUMNS = [
+    Column.KOMMUNENUMMER,
+    Column.GJELDER_KUN_DEL_AV_KOMMUNEN,
+    Column.GJELDER_FOR_BRUKT_SOM_HELARSBOLIG,
+    Column.GJELDER_FOR_BOLIG_IKKE_TATT_I_BRUK,
+    Column.GJELDER_FOR_UBEBYGD_BOLIGTOMT,
+    Column.HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK,
+    Column.ANDRE_LOKALE_AVGRENSNINGER,
+    Column.HAR_USIKKER_AVGRENSNING,
 ]
-
-_VILKAAR_COLUMNS = [
-    "bebygd_eiendom",
-    "helaarsbolig",
-    "ubebygd_tomt",
-    "slektskapsunntak",
-    "andre_avgrensninger",
-    "usikker_avgrensning",
-]
-
-# TODO:
-# Midlertidig mapping fra dagens databasenavn til API-feltnavn
-# brukt i OGC Processes. Planen er å renavne feltene i databasen senere,
-# slik at både OGC Processes og OGC Features kan eksponere samme feltnavn.
-_VILKAAR_RENAME = {
-    "bebygd_eiendom": "gjelderForBruktSomHelarsbolig",
-    "helaarsbolig": "gjelderForBoligIkkeTattIBruk",
-    "ubebygd_tomt": "gjelderForUbebygdBoligtomt",
-    "slektskapsunntak": "harUnntakFraSlektskapsunntak",
-    "andre_avgrensninger": "andreLokaleAvgrensninger",
-    "usikker_avgrensning": "harUsikkerAvgrensning",
-}
-
-_ALL_COLUMNS = _KOMMUNE_COLUMNS + _VILKAAR_COLUMNS
-
-
-def _gjelder_to_bool(value):
-    """
-    TODO:
-    Midlertidig kompatibilitet: DB har tekstverdier som
-    representerer bool. Disse konverteres i API-laget inntil feltene
-    er migrert til boolske verdier i databasen.
-    """
-    if isinstance(value, str):
-        return value.lower() == "gjelder"
-    return bool(value)
-
-
-def _map_vilkaar(row_dict):
-    result = {}
-    for db_col, api_name in _VILKAAR_RENAME.items():
-        val = row_dict.get(db_col)
-        if db_col in ("andre_avgrensninger", "usikker_avgrensning"):
-            result[api_name] = val
-        else:
-            # TODO: Fix dette når databasemodellen er migrert til boolske verdier
-            result[api_name] = _gjelder_to_bool(val)
-    return result
-
 
 def bygg_boplikt_resultat(boplikt, row_dict):
     """Bygg flat response-dict med boplikt-status og materielle vilkår."""
     result = {"iBopliktomrade": boplikt}
-    result.update(_map_vilkaar(row_dict))
+    result.update(row_dict)
     return result
 
 
@@ -137,10 +104,10 @@ def sjekk_kommune_boplikt(kommunenummer):
     Raises:
         ProcessorExecuteError: Ved databasefeil.
     """
-    cols = ", ".join(_ALL_COLUMNS)
+    cols = ", ".join(_COLUMNS)
     sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
     rows = _execute_query(sql, (kommunenummer,))
-    return [dict(zip(_ALL_COLUMNS, row)) for row in rows]
+    return [dict(zip(_COLUMNS, row)) for row in rows]
 
 
 def sjekk_boplikt(geojson_geom, kommunenummer=None):
@@ -151,7 +118,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     fra første treff.
     """
     geojson_str = json.dumps(geojson_geom)
-    cols = ", ".join(_ALL_COLUMNS)
+    cols = ", ".join(_COLUMNS)
 
     sql = f"""
         WITH input AS (
@@ -179,5 +146,5 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     else:
         boplikt = "JA"
 
-    first = dict(zip(_ALL_COLUMNS, rows[0][:-1]))
+    first = dict(zip(_COLUMNS, rows[0][:-1]))
     return bygg_boplikt_resultat(boplikt, first)

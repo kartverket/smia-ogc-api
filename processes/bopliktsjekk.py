@@ -21,6 +21,7 @@ import logging
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 from processes.utils.boplikt_db import (
+    Column,
     bygg_boplikt_resultat,
     sjekk_boplikt,
     sjekk_kommune_boplikt,
@@ -104,7 +105,7 @@ class BopliktSjekkProcessor(BaseProcessor):
             LOGGER.info("Kommune %s har ikke boplikt, returnerer INGEN", kommunenummer)
             return "application/json", {"iBopliktomrade": "NEI"}
 
-        if all(not kommune["delvis_boplikt"] for kommune in kommune_med_boplikt):
+        if all(not kommune[Column.GJELDER_KUN_DEL_AV_KOMMUNEN] for kommune in kommune_med_boplikt):
             LOGGER.info("Kommune %s har full boplikt, returnerer FULL", kommunenummer)
             return "application/json", bygg_boplikt_resultat(
                 "JA", kommune_med_boplikt[0]
