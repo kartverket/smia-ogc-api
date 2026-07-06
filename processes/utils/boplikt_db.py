@@ -10,6 +10,8 @@ from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
+
+
 class Column(StrEnum):
     KOMMUNENUMMER = "kommunenummer"
     GJELDER_KUN_DEL_AV_KOMMUNEN = "gjelderKunDelAvKommunen"
@@ -19,6 +21,7 @@ class Column(StrEnum):
     HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK = "harUnntakFraSlektskapsunntak"
     ANDRE_LOKALE_AVGRENSNINGER = "andreLokaleAvgrensninger"
     HAR_USIKKER_AVGRENSNING = "harUsikkerAvgrensning"
+
 
 _COLUMNS = [
     Column.KOMMUNENUMMER,
@@ -30,6 +33,7 @@ _COLUMNS = [
     Column.ANDRE_LOKALE_AVGRENSNINGER,
     Column.HAR_USIKKER_AVGRENSNING,
 ]
+
 
 def bygg_boplikt_resultat(boplikt, row_dict):
     """Bygg flat response-dict med boplikt-status og materielle vilkår."""
