@@ -90,9 +90,11 @@ def _execute_query(sql, params):
         user_msg="En feil oppstod, prøv igjen senere."
     ) from None
 
+
 def get_cols():
     """Returnerer listen med kolonnenavn i bopliktomraade-tabellen."""
     return ", ".join(f'"{c}"' for c in _COLUMNS)
+
 
 def sjekk_kommune_boplikt(kommunenummer):
     """Finn om en kommune har boplikt.
