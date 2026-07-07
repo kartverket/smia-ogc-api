@@ -13,7 +13,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Column(StrEnum):
-    KOMMUNENUMMER = "kommunenummer"
     GJELDER_KUN_DEL_AV_KOMMUNEN = "gjelderKunDelAvKommunen"
     GJELDER_FOR_BRUKT_SOM_HELARSBOLIG = "gjelderForBruktSomHelarsbolig"
     GJELDER_FOR_BOLIG_IKKE_TATT_I_BRUK = "gjelderForBoligIkkeTattIBruk"
@@ -24,14 +23,13 @@ class Column(StrEnum):
 
 
 _COLUMNS = [
-    Column.KOMMUNENUMMER,
-    Column.GJELDER_KUN_DEL_AV_KOMMUNEN,
-    Column.GJELDER_FOR_BRUKT_SOM_HELARSBOLIG,
-    Column.GJELDER_FOR_BOLIG_IKKE_TATT_I_BRUK,
-    Column.GJELDER_FOR_UBEBYGD_BOLIGTOMT,
-    Column.HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK,
-    Column.ANDRE_LOKALE_AVGRENSNINGER,
-    Column.HAR_USIKKER_AVGRENSNING,
+    Column.GJELDER_KUN_DEL_AV_KOMMUNEN.value,
+    Column.GJELDER_FOR_BRUKT_SOM_HELARSBOLIG.value,
+    Column.GJELDER_FOR_BOLIG_IKKE_TATT_I_BRUK.value,
+    Column.GJELDER_FOR_UBEBYGD_BOLIGTOMT.value,
+    Column.HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK.value,
+    Column.ANDRE_LOKALE_AVGRENSNINGER.value,
+    Column.HAR_USIKKER_AVGRENSNING.value,
 ]
 
 
@@ -39,6 +37,7 @@ def bygg_boplikt_resultat(boplikt, row_dict):
     """Bygg flat response-dict med boplikt-status og materielle vilkår."""
     result = {"iBopliktomrade": boplikt}
     result.update(row_dict)
+    result.pop(Column.GJELDER_KUN_DEL_AV_KOMMUNEN.value, None)
     return result
 
 
@@ -91,6 +90,9 @@ def _execute_query(sql, params):
         user_msg="En feil oppstod, prøv igjen senere."
     ) from None
 
+def get_cols():
+    """Returnerer listen med kolonnenavn i bopliktomraade-tabellen."""
+    return ", ".join(f'"{c}"' for c in _COLUMNS)
 
 def sjekk_kommune_boplikt(kommunenummer):
     """Finn om en kommune har boplikt.
@@ -108,7 +110,7 @@ def sjekk_kommune_boplikt(kommunenummer):
     Raises:
         ProcessorExecuteError: Ved databasefeil.
     """
-    cols = ", ".join(_COLUMNS)
+    cols = get_cols()
     sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
     rows = _execute_query(sql, (kommunenummer,))
     return [dict(zip(_COLUMNS, row)) for row in rows]
@@ -122,7 +124,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     fra første treff.
     """
     geojson_str = json.dumps(geojson_geom)
-    cols = ", ".join(_COLUMNS)
+    cols = get_cols()
 
     sql = f"""
         WITH input AS (
