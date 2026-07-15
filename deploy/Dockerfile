@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/astral-sh/uv:0.11.26@sha256:3d868e555f8f1dbc324afa005066cd11e1053fc4743b9808ca8025283e65efa5 AS uv
+FROM ghcr.io/astral-sh/uv:0.11.28@sha256:0f36cb9361a3346885ca3677e3767016687b5a170c1a6b88465ec14aefec90aa AS uv
 
 # ---------- Byggesteg ----------
 FROM dhi.io/python:3.12-dev@sha256:b1ed7d6070221ee0ce57e0ddae338123223a95b49fd73b24561cf54e333d8747 AS builder
