@@ -12,7 +12,7 @@ dependencies = [
     "json-log-formatter>=1.2.1",
     "prometheus-flask-exporter>=0.23.2",
     "psycopg2-binary>=2.9.11",
-    "pygeoapi>=0.23.4",
+    "pygeoapi>=0.23.5",
     "shapely>=2.0",
     "zeep>=4.3.3",
 ]
