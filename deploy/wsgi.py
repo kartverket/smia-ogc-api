@@ -35,7 +35,7 @@ def _bad_request(description: str):
 @app.before_request
 def check_bopliktsjekk_inputs():
     if request.path != _EXECUTION_PATH or request.method != "POST":
-        return
+        return None
 
     body = request.get_json(silent=True)
     if body is None:
@@ -54,6 +54,7 @@ def check_bopliktsjekk_inputs():
             f"Ukjente felt i inputs: {sorted(unknown_inputs)}. "
             f"Gyldige inputs: {_BOPLIKTSJEKK_INPUT_SCHEMA}."
         )
+    return None
 
 
 @app.before_request
