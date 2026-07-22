@@ -1,13 +1,26 @@
 """Prosessor for bopliktsjekk basert på innsendt GeoJSON-geometri."""
 
 import logging
+import os
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
+from shapely import get_num_coordinates
+from shapely.geometry import shape
 
 from processes.utils.boplikt_db import sjekk_boplikt
 from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
 
 LOGGER = logging.getLogger(__name__)
+
+# Node og områdebegrensninger for å unngå Denial-of-Service 
+_MAX_VERTICES = int(os.environ.get("GEOM_MAX_VERTICES", "10000"))
+_MAX_BBOX_AREA_KM2 = float(os.environ.get("GEOM_MAX_BBOX_AREA_KM2", "1000"))
+_MAX_BBOX_AREA_M2 = _MAX_BBOX_AREA_KM2 * 1e6
+
+_X_MIN, _X_MAX = -500_000, 1_100_000
+_Y_MIN, _Y_MAX = 6_000_000, 9_000_000
+
+_ALLOWED_TYPES = ("Point", "Polygon", "MultiPolygon")
 
 PROCESS_METADATA = {
     "version": "0.1.0",
@@ -62,12 +75,46 @@ class BopliktSjekkGeometriProcessor(BaseProcessor):
         if geojson_geom is None:
             raise ProcessorExecuteError(user_msg="Mangler input: geometri")
 
-        geom_type = geojson_geom.get("type", "")
-        if geom_type not in ("Point", "Polygon", "MultiPolygon"):
-            raise ProcessorExecuteError(
-                user_msg=f"Ugyldig geometritype: {geom_type}. "
-                "Må være Point, Polygon eller MultiPolygon."
-            )
+        _valider_geometri(geojson_geom)
 
         result = sjekk_boplikt(geojson_geom)
         return "application/json", result
+
+
+
+def _valider_geometri(geojson_geom: dict) -> None:
+    """Kaster ProcessorExecuteError hvis geometrien ikke passerer validering."""
+    try:
+        geom = shape(geojson_geom)
+    except Exception:
+        raise ProcessorExecuteError(
+            user_msg="Kunne ikke tolke geometrien som gyldig GeoJSON."
+        ) from None
+
+    if geom.geom_type not in _ALLOWED_TYPES:
+        raise ProcessorExecuteError(
+            user_msg=f"Ugyldig geometritype: '{geom.geom_type}'. "
+            f"Må være {', '.join(_ALLOWED_TYPES)}."
+        )
+
+    if get_num_coordinates(geom) > _MAX_VERTICES:
+        raise ProcessorExecuteError(
+            user_msg=f"For mange koordinater ({get_num_coordinates(geom):,}). "
+            f"Maksimalt tillatt: {_MAX_VERTICES:,}."
+        )
+
+    minx, miny, maxx, maxy = geom.bounds
+    if minx < _X_MIN or maxx > _X_MAX or miny < _Y_MIN or maxy > _Y_MAX:
+        raise ProcessorExecuteError(
+            user_msg="Geometrien er utenfor gyldig område for EPSG:25833. "
+            f"Forventet X: [{_X_MIN}, {_X_MAX}], Y: [{_Y_MIN}, {_Y_MAX}]."
+        )
+
+    if (maxx - minx) * (maxy - miny) > _MAX_BBOX_AREA_M2:
+        raise ProcessorExecuteError(
+            user_msg="Geometrien dekker et for stort område. "
+            f"Maksimalt tillatt: {_MAX_BBOX_AREA_KM2:.0f} km²."
+        )
+
+    if not geom.is_valid:
+        raise ProcessorExecuteError(user_msg="Geometrien er ikke topologisk gyldig.")
