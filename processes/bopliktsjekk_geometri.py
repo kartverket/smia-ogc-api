@@ -12,7 +12,7 @@ from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
 
 LOGGER = logging.getLogger(__name__)
 
-# Node og områdebegrensninger for å unngå Denial-of-Service 
+# Node og områdebegrensninger for å unngå Denial-of-Service
 _MAX_VERTICES = int(os.environ.get("GEOM_MAX_VERTICES", "10000"))
 _MAX_BBOX_AREA_KM2 = float(os.environ.get("GEOM_MAX_BBOX_AREA_KM2", "1000"))
 _MAX_BBOX_AREA_M2 = _MAX_BBOX_AREA_KM2 * 1e6
@@ -79,7 +79,6 @@ class BopliktSjekkGeometriProcessor(BaseProcessor):
 
         result = sjekk_boplikt(geojson_geom)
         return "application/json", result
-
 
 
 def _valider_geometri(geojson_geom: dict) -> None:
