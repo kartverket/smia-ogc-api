@@ -7,7 +7,9 @@ from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 from pygeoapi.flask_app import APP as app
 
 from processes.bopliktsjekk import PROCESS_METADATA as _BOPLIKTSJEKK_METADATA
-from processes.bopliktsjekk_geometri import PROCESS_METADATA as _BOPLIKTSJEKK_GEOMETRI_METADATA
+from processes.bopliktsjekk_geometri import (
+    PROCESS_METADATA as _BOPLIKTSJEKK_GEOMETRI_METADATA,
+)
 
 logger = logging.getLogger(__name__)
 
