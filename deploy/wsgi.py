@@ -7,6 +7,7 @@ from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 from pygeoapi.flask_app import APP as app
 
 from processes.bopliktsjekk import PROCESS_METADATA as _BOPLIKTSJEKK_METADATA
+from processes.bopliktsjekk_geometri import PROCESS_METADATA as _BOPLIKTSJEKK_GEOMETRI_METADATA
 
 logger = logging.getLogger(__name__)
 
@@ -17,14 +18,23 @@ OPEN_PATHS = {"/v1/", "/v1", "/v1/openapi", "/v1/conformance", "/health"}
 metrics = GunicornPrometheusMetrics(app)
 
 
-_EXECUTION_PATH = "/v1/processes/bopliktsjekk/execution"
-_BOPLIKTSJEKK_INPUT_KEYS: frozenset[str] = frozenset(_BOPLIKTSJEKK_METADATA["inputs"])
-_BOPLIKTSJEKK_INPUT_SCHEMA: dict = {
-    name: {
-        "type": defn["schema"]["type"],
-        "required": defn.get("minOccurs", 0) >= 1,
+def _input_spec(metadata: dict) -> tuple[frozenset, dict]:
+    keys = frozenset(metadata["inputs"])
+    schema = {
+        name: {
+            "type": defn["schema"]["type"],
+            "required": defn.get("minOccurs", 0) >= 1,
+        }
+        for name, defn in metadata["inputs"].items()
     }
-    for name, defn in _BOPLIKTSJEKK_METADATA["inputs"].items()
+    return keys, schema
+
+
+_PROCESS_INPUT_SPECS: dict[str, tuple[frozenset, dict]] = {
+    "/v1/processes/bopliktsjekk/execution": _input_spec(_BOPLIKTSJEKK_METADATA),
+    "/v1/processes/bopliktsjekk-geometri/execution": _input_spec(
+        _BOPLIKTSJEKK_GEOMETRI_METADATA
+    ),
 }
 
 
@@ -34,8 +44,11 @@ def _bad_request(description: str):
 
 @app.before_request
 def check_bopliktsjekk_inputs():
-    if request.path != _EXECUTION_PATH or request.method != "POST":
+    spec = _PROCESS_INPUT_SPECS.get(request.path)
+    if spec is None or request.method != "POST":
         return None
+
+    input_keys, input_schema = spec
 
     body = request.get_json(silent=True)
     if body is None:
@@ -47,12 +60,12 @@ def check_bopliktsjekk_inputs():
     if not isinstance(inputs, dict):
         return _bad_request("'inputs' må være et objekt.")
 
-    unknown_inputs = set(inputs) - _BOPLIKTSJEKK_INPUT_KEYS
+    unknown_inputs = set(inputs) - input_keys
     if unknown_inputs:
         logger.warning("Ukjente felt i inputs for %s: %s", request.path, unknown_inputs)
         return _bad_request(
             f"Ukjente felt i inputs: {sorted(unknown_inputs)}. "
-            f"Gyldige inputs: {_BOPLIKTSJEKK_INPUT_SCHEMA}."
+            f"Gyldige inputs: {input_schema}."
         )
     return None
 
