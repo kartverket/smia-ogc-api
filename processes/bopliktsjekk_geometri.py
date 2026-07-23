@@ -96,9 +96,10 @@ def _valider_geometri(geojson_geom: dict) -> None:
             f"Må være {', '.join(_ALLOWED_TYPES)}."
         )
 
-    if get_num_coordinates(geom) > _MAX_VERTICES:
+    num_coords = get_num_coordinates(geom)
+    if num_coords > _MAX_VERTICES:
         raise ProcessorExecuteError(
-            user_msg=f"For mange koordinater ({get_num_coordinates(geom):,}). "
+            user_msg=f"For mange koordinater ({num_coords:,}). "
             f"Maksimalt tillatt: {_MAX_VERTICES:,}."
         )
 
