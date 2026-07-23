@@ -36,12 +36,12 @@ flowchart TD
 
 Bopliktsjekken bruker `ThreadedConnectionPool` fra psycopg2 med `minconn=1` og `maxconn=2` per prosess. Poolen opprettes lazy og gjenbrukes for resten av prosessens levetid.
 
-Gunicorn kjører med sync workers, som betyr at hver worker kun håndterer én request om gangen. I praksis brukes derfor bare **1 tilkobling per worker** samtidig, uavhengig av `maxconn`.
+Gunicorn kjører med sync workers. Hver worker håndterer én request om gangen og bruker derfor bare **1 tilkobling per worker** samtidig. Den ekstra tilkoblingen i poolen er en reserve for automatisk reconnect ved brutt tilkobling.
 
 Reelt antall tilkoblinger: **pods × workers = aktive tilkoblinger**
 
 | Pods | Workers | Aktive tilkoblinger | maxconn (teoretisk maks) |
-|------|---------|---------------------|--------------------------|
+| ---- | ------- | ------------------- | ------------------------ |
 | 3    | 4       | 12                  | 24                       |
 | 5    | 4       | 20                  | 40                       |
 
@@ -49,17 +49,17 @@ Prod-databasen har `max_connections = 300`. Databasen deles med `kommuneinfo-api
 
 ## Datadeling: OGC-features
 
-* Deling av bopliktområder som OGC-features, med tilgangsstyring via API-nøkkel i dagens løsning
-* Henter data fra `kommuneinfo.bopliktomraade`-tabellen og eksponerer via OGC API Features
-* Viser felter slike som det er i lagret i databasen.
-* Ingen transformasjon av geometri, CRS er EPSG:25833 (UTM sone 33) gjennom hele kjeden.
-* Kan gjøre custom spørringer som å filtrere på kommunenummer, delvis_boplikt, eller andre attributter i tabellen.
-* Kan gjøre romlige spørringer som å finne alle bopliktområder som overlapper en gitt geometri.
+- Deling av bopliktområder som OGC-features, med tilgangsstyring via API-nøkkel i dagens løsning
+- Henter data fra `kommuneinfo.bopliktomraade`-tabellen og eksponerer via OGC API Features
+- Viser felter slike som det er i lagret i databasen.
+- Ingen transformasjon av geometri, CRS er EPSG:25833 (UTM sone 33) gjennom hele kjeden.
+- Kan gjøre custom spørringer som å filtrere på kommunenummer, delvis_boplikt, eller andre attributter i tabellen.
+- Kan gjøre romlige spørringer som å finne alle bopliktområder som overlapper en gitt geometri.
 
 ## Bopliktsjekk: OGC-process
 
-* Custom OGC-process som tar inn geometri eller matrikkelsnummer og sjekker mot bopliktområder
-* Kan både gjøre kall mot database og andre api-er som Matrikkel API.
-* Vi styrer hva som blir returnert i svaret
-* F.eks hvilke felter som skal være med i svaret, og hvordan resultatet skal struktureres
-* I dagens implementasjon returneres bopliktresultat og materielle vilkår. Interne metadata fra geometrihenting (for eksempel hjelpelinjetyper) returneres ikke i API-responsen.
+- Custom OGC-process som tar inn geometri eller matrikkelsnummer og sjekker mot bopliktområder
+- Kan både gjøre kall mot database og andre api-er som Matrikkel API.
+- Vi styrer hva som blir returnert i svaret
+- F.eks hvilke felter som skal være med i svaret, og hvordan resultatet skal struktureres
+- I dagens implementasjon returneres bopliktresultat og materielle vilkår. Interne metadata fra geometrihenting (for eksempel hjelpelinjetyper) returneres ikke i API-responsen.

@@ -8,7 +8,7 @@ from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 
 bind = f"{os.environ.get('CONTAINER_HOST', '0.0.0.0')}:{os.environ.get('CONTAINER_PORT', '5000')}"
 workers = int(os.environ.get("WSGI_WORKERS", "4"))
-worker_class = os.environ.get("WSGI_WORKER_CLASS", "gevent")
+worker_class = os.environ.get("WSGI_WORKER_CLASS", "sync")
 limit_request_body = int(os.environ.get("MAX_REQUEST_BODY_BYTES", str(512 * 1024)))
 
 accesslog = "-"
