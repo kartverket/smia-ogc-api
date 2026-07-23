@@ -41,6 +41,8 @@ def bygg_boplikt_resultat(boplikt, row_dict):
     return result
 
 
+_STATEMENT_TIMEOUT = os.environ.get("DB_STATEMENT_TIMEOUT", "15s")
+
 _db_pool = None
 
 
@@ -72,6 +74,10 @@ def _execute_query(sql, params):
         try:
             with conn:
                 with conn.cursor() as cur:
+                    cur.execute(
+                        "SET LOCAL statement_timeout = %s",
+                        (_STATEMENT_TIMEOUT,),
+                    )
                     cur.execute(sql, params)
                     return cur.fetchall()
         except (OperationalError, InterfaceError) as e:
@@ -135,7 +141,8 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         SELECT {cols},
                ST_Within(input.geom, omrade) AS is_within
         FROM kommuneinfo.bopliktomraade, input
-        WHERE ST_Intersects(input.geom, omrade)
+        WHERE omrade && input.geom
+          AND ST_Intersects(input.geom, omrade)
     """
     params = [geojson_str]
 
