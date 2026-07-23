@@ -116,7 +116,7 @@ def _valider_geometri(geojson_geom: dict) -> None:
     if (maxx - minx) * (maxy - miny) > _MAX_BBOX_AREA_M2:
         raise ProcessorExecuteError(
             user_msg="Geometrien dekker et for stort område. "
-            f"Maksimalt tillatt: {_MAX_BBOX_AREA_KM2:.0f} km²."
+            f"Maksimalt tillatt: {_MAX_BBOX_AREA_KM2:g} km²."
         )
 
     if not geom.is_valid:
