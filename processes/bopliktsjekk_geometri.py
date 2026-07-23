@@ -96,6 +96,9 @@ def _valider_geometri(geojson_geom: dict) -> None:
             f"Må være {', '.join(_ALLOWED_TYPES)}."
         )
 
+    if geom.is_empty:
+        raise ProcessorExecuteError(user_msg="Geometrien er tom.")
+
     num_coords = get_num_coordinates(geom)
     if num_coords > _MAX_VERTICES:
         raise ProcessorExecuteError(
