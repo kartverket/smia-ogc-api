@@ -1,7 +1,8 @@
 
 services:
   db:
-    image: postgis/postgis:latest
+    image: postgis/postgis:18-3.6
+    platform: linux/amd64
     environment:
       POSTGRES_DB: inndelinger
       POSTGRES_USER: inndelinger
@@ -24,17 +25,17 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_HOST: db 
+      DB_HOST: db
       DB_PORT: "5432"
       DB_NAME: inndelinger
       DB_USER: inndelinger
       DB_PASSWORD: inndelinger
-      PYGEOAPI_URL: http://localhost:5000
+      PYGEOAPI_URL: http://localhost:5001
       OGC_API_KEY: testkey
       MATRIKKELEN_USERNAME: ${MATRIKKELEN_USERNAME:-}
       MATRIKKELEN_PASSWORD: ${MATRIKKELEN_PASSWORD:-}
     ports:
-      - "5001:5000"
+      - "5001:5001"
       - "8181:8181"
     develop:
       watch:

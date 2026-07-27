@@ -42,7 +42,7 @@ def bygg_boplikt_resultat(boplikt, row_dict):
 
 
 _STATEMENT_TIMEOUT = os.environ.get("DB_STATEMENT_TIMEOUT", "15s")
-_DB_SCHEMA = os.environ.get("DB_NAME", "inndelinger")
+_DB_SCHEMA = os.environ.get("DB_SCHEMA", "inndelinger")
 
 _db_pool = None
 
@@ -128,7 +128,7 @@ def sjekk_kommune_boplikt(kommunenummer):
 def sjekk_boplikt(geojson_geom, kommunenummer=None):
     """Sjekk om en GeoJSON-geometri treffer bopliktområder i databasen.
 
-    Kjører ST_Intersects og ST_Within mot inndelinger.bopliktomraade.
+    Kjører ST_Intersects og ST_Within mot <DB_SCHEMA>.bopliktomraade.
     Returnerer flat dict med boplikt (ja/nei/delvis) og materielle vilkår
     fra første treff.
     """

@@ -65,11 +65,11 @@ resources:
               data:
                   host: ${DB_HOST}
                   port: ${DB_PORT:-5432}
-                  dbname: ${DB_NAME}
+                  dbname: ${DB_NAME:-inndelinger}
                   user: ${DB_USER}
                   password: ${DB_PASSWORD}
                   search_path:
-                        - ${DB_NAME}
+                        - ${DB_SCHEMA:-inndelinger}
               id_field: kommunenummer
               table: bopliktomraade
               geom_field: omrade
