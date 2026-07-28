@@ -85,7 +85,7 @@ def _valider_geometri(geojson_geom: dict) -> None:
     """Kaster ProcessorExecuteError hvis geometrien ikke passerer validering."""
     try:
         geom = shape(geojson_geom)
-    except Exception:  # noqa: BLE001
+    except Exception:
         raise ProcessorExecuteError(
             user_msg="Kunne ikke tolke geometrien som gyldig GeoJSON."
         ) from None

@@ -118,7 +118,7 @@ class BopliktSjekkProcessor(BaseProcessor):
             "Kommune %s har delvis boplikt, henter teiggeometri fra Matrikkel-API",
             kommunenummer,
         )
-        geom, _hjelpelinjetyper, _geom_validering, _har_bue = hent_teiggeometri(
+        geom, hjelpelinjetyper, geom_validering, har_bue = hent_teiggeometri(
             get_matrikkel_client(),
             kommunenummer,
             gardsnummer,

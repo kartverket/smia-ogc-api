@@ -68,7 +68,7 @@ def _validate_geometry(geom):
         s = shape(geom)
         valid = s.is_valid
         return {"is_valid": valid, "reason": None if valid else explain_validity(s)}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return {"is_valid": False, "reason": str(e)}
 
 

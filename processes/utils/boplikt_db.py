@@ -42,7 +42,6 @@ def bygg_boplikt_resultat(boplikt, row_dict):
 
 
 _STATEMENT_TIMEOUT = os.environ.get("DB_STATEMENT_TIMEOUT", "15s")
-_DB_SCHEMA = os.environ.get("DB_SCHEMA", "inndelinger")
 
 _db_pool = None
 
@@ -60,7 +59,7 @@ def _get_pool():
                 user=os.environ.get("DB_USER", "postgres"),
                 password=os.environ.get("DB_PASSWORD", "postgres"),
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
             raise ProcessorExecuteError(
                 user_msg="En feil oppstod, prøv igjen senere."
@@ -73,18 +72,19 @@ def _execute_query(sql, params):
     for attempt in range(2):
         conn = db_pool.getconn()
         try:
-            with conn, conn.cursor() as cur:
-                cur.execute(
-                    "SET LOCAL statement_timeout = %s",
-                    (_STATEMENT_TIMEOUT,),
-                )
-                cur.execute(sql, params)
-                return cur.fetchall()
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SET LOCAL statement_timeout = %s",
+                        (_STATEMENT_TIMEOUT,),
+                    )
+                    cur.execute(sql, params)
+                    return cur.fetchall()
         except (OperationalError, InterfaceError) as e:
             LOGGER.warning(
                 "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             LOGGER.error("Databasefeil: %s", e)
             raise ProcessorExecuteError(
                 user_msg="En feil oppstod, prøv igjen senere."
@@ -119,7 +119,7 @@ def sjekk_kommune_boplikt(kommunenummer):
         ProcessorExecuteError: Ved databasefeil.
     """
     cols = get_cols()
-    sql = f"SELECT {cols} FROM {_DB_SCHEMA}.bopliktomraade WHERE kommunenummer = %s"
+    sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
     rows = _execute_query(sql, (kommunenummer,))
     return [dict(zip(_COLUMNS, row)) for row in rows]
 
@@ -127,7 +127,7 @@ def sjekk_kommune_boplikt(kommunenummer):
 def sjekk_boplikt(geojson_geom, kommunenummer=None):
     """Sjekk om en GeoJSON-geometri treffer bopliktområder i databasen.
 
-    Kjører ST_Intersects og ST_Within mot <DB_SCHEMA>.bopliktomraade.
+    Kjører ST_Intersects og ST_Within mot kommuneinfo.bopliktomraade.
     Returnerer flat dict med boplikt (ja/nei/delvis) og materielle vilkår
     fra første treff.
     """
@@ -140,7 +140,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         )
         SELECT {cols},
                ST_Within(input.geom, omrade) AS is_within
-        FROM {_DB_SCHEMA}.bopliktomraade, input
+        FROM kommuneinfo.bopliktomraade, input
         WHERE omrade && input.geom
           AND ST_Intersects(input.geom, omrade)
     """

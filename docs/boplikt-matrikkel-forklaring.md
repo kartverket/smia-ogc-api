@@ -44,8 +44,8 @@ Alle prosessorer følger dette mønsteret:
 ```python
 # processes/bopliktsjekk.py
 
-
 class BopliktSjekkProcessor(BaseProcessor):
+
     def __init__(self, processor_def):
         super().__init__(processor_def, PROCESS_METADATA)
         # PROCESS_METADATA beskriver inputs/outputs til OGC API
@@ -227,9 +227,7 @@ def build_ring(curve_directions):
         coords.append(points[node])
         # Legg til kurvepunkter mellom start/end (reversert ved baklengs)
         if edge["kurvepunkter"]:
-            coords.extend(
-                edge["kurvepunkter"] if cd["signed"] else reversed(edge["kurvepunkter"])
-            )
+            coords.extend(edge["kurvepunkter"] if cd["signed"] else reversed(edge["kurvepunkter"]))
     coords.append(coords[0])  # lukk ringen
 ```
 
@@ -256,11 +254,7 @@ Visuelt for eksempeleiendommen:
 ```python
 if len(polygons) == 1:
     return {"type": "Polygon", "coordinates": polygons}, hjelpelinjetyper, har_bue
-return (
-    {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]},
-    hjelpelinjetyper,
-    har_bue,
-)
+return {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]}, hjelpelinjetyper, har_bue
 ```
 
 Funksjonen returnerer også:
