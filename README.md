@@ -43,7 +43,7 @@ Dette starter to tjenester:
 
 | Tjeneste | Adresse                 | Beskrivelse                   |
 | -------- | ----------------------- | ----------------------------- |
-| `api`    | <http://localhost:5001> | OGC API (pygeoapi + gunicorn) |
+| `api`    | <http://localhost:5000> | OGC API (pygeoapi + gunicorn) |
 | `db`     | `localhost:5432`        | PostGIS med mockdata          |
 
 Prometheus-metrikker er tilgjengelig på <http://localhost:8181>.

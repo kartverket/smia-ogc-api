@@ -41,10 +41,10 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYGEOAPI_OPENAPI=/tmp/openapi.yml \
     WSGI_APP=deploy.wsgi:app \
     CONTAINER_HOST=0.0.0.0 \
-    CONTAINER_PORT=5001
+    CONTAINER_PORT=5000
 
 USER nonroot
-EXPOSE 5001 8181
+EXPOSE 5000 8181
 
 ENTRYPOINT ["/app/.venv/bin/python", "/app/deploy/start.py"]
 

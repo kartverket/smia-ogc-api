@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE SCHEMA IF NOT EXISTS inndelinger;
+CREATE SCHEMA IF NOT EXISTS kommuneinfo;
 
-CREATE TABLE inndelinger.bopliktomraade (
+CREATE TABLE kommuneinfo.bopliktomraade (
     kommunenummer        text PRIMARY KEY,
     delvis_boplikt       boolean NOT NULL,
     bebygd_eiendom       text,
@@ -14,10 +14,10 @@ CREATE TABLE inndelinger.bopliktomraade (
 );
 
 CREATE INDEX bopliktomraade_omrade_gix
-    ON inndelinger.bopliktomraade USING gist (omrade);
+    ON kommuneinfo.bopliktomraade USING gist (omrade);
 
 -- 1) Område som dekker eksempel-geometrien i bopliktsjekk_geometri.py
-INSERT INTO inndelinger.bopliktomraade VALUES (
+INSERT INTO kommuneinfo.bopliktomraade VALUES (
     '4601', true,
     'Gjelder', 'Gjelder', 'Gjelder ikke', 'Gjelder',
     NULL, false,
@@ -27,7 +27,7 @@ INSERT INTO inndelinger.bopliktomraade VALUES (
 );
 
 -- 2) Full boplikt for hele kommunen
-INSERT INTO inndelinger.bopliktomraade VALUES (
+INSERT INTO kommuneinfo.bopliktomraade VALUES (
     '0301', false,
     'Gjelder', 'Gjelder', 'Gjelder', 'Gjelder ikke',
     NULL, false,
@@ -37,7 +37,7 @@ INSERT INTO inndelinger.bopliktomraade VALUES (
 );
 
 -- 3) Område med usikker avgrensning
-INSERT INTO inndelinger.bopliktomraade VALUES (
+INSERT INTO kommuneinfo.bopliktomraade VALUES (
     '1806', true,
     'Gjelder ikke', 'Gjelder', 'Gjelder', 'Gjelder',
     'Avgrensning under revisjon.', true,
