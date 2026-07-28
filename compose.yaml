@@ -3,15 +3,15 @@ services:
   db:
     image: postgis/postgis:18-3.6
     environment:
-      POSTGRES_DB: boplikt
-      POSTGRES_USER: boplikt
-      POSTGRES_PASSWORD: boplikt
+      POSTGRES_DB: inndelinger
+      POSTGRES_USER: inndelinger
+      POSTGRES_PASSWORD: inndelinger
     ports:
       - "5432:5432"
     volumes:
       - ./dev/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U boplikt -d boplikt"]
+      test: ["CMD-SHELL", "pg_isready -U inndelinger -d inndelinger"]
       interval: 3s
       timeout: 3s
       retries: 10
@@ -24,11 +24,12 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_HOST: db
+      INNDELINGER_DB_HOST: db
       DB_PORT: "5432"
-      DB_NAME: boplikt
-      DB_USER: boplikt
-      DB_PASSWORD: boplikt
+      DB_NAME: inndelinger
+      INNDELINGER_DB_USER: inndelinger
+      INNDELINGER_DB_PASSWORD: inndelinger
+      DB_SCHEMA: inndelinger
       PYGEOAPI_URL: http://localhost:5000
       OGC_API_KEY: testkey
       MATRIKKELEN_USERNAME: ${MATRIKKELEN_USERNAME:-}

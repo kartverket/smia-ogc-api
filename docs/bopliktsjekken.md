@@ -45,12 +45,12 @@ Reelt antall tilkoblinger: **pods × workers = aktive tilkoblinger**
 | 3    | 4       | 12                  | 24                       |
 | 5    | 4       | 20                  | 40                       |
 
-Prod-databasen har `max_connections = 300`. Databasen deles med `kommuneinfo-api`, så den totale belastningen er høyere enn bare smia-ogc-api alene.
+Prod-databasen har `max_connections = 300`.
 
 ## Datadeling: OGC-features
 
 - Deling av bopliktområder som OGC-features, med tilgangsstyring via API-nøkkel i dagens løsning
-- Henter data fra `kommuneinfo.bopliktomraade`-tabellen og eksponerer via OGC API Features
+- Henter data fra `inndelinger.bopliktomraade`-tabellen og eksponerer via OGC API Features
 - Viser felter slike som det er i lagret i databasen.
 - Ingen transformasjon av geometri, CRS er EPSG:25833 (UTM sone 33) gjennom hele kjeden.
 - Kan gjøre custom spørringer som å filtrere på kommunenummer, delvis_boplikt, eller andre attributter i tabellen.
