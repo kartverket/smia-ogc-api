@@ -29,17 +29,17 @@ class JsonRequestFormatter(json_log_formatter.JSONFormatter):
         if record.args["q"]:
             url += f"?{record.args['q']}"
 
-        return dict(
-            remote_ip=record.args["h"],
-            method=record.args["m"],
-            path=url,
-            status=str(record.args["s"]),
-            time=response_time.isoformat(),
-            user_agent=record.args["a"],
-            referer=record.args["f"],
-            duration_in_ms=record.args["M"],
-            pid=record.args["p"],
-        )
+        return {
+            "remote_ip": record.args["h"],
+            "method": record.args["m"],
+            "path": url,
+            "status": str(record.args["s"]),
+            "time": response_time.isoformat(),
+            "user_agent": record.args["a"],
+            "referer": record.args["f"],
+            "duration_in_ms": record.args["M"],
+            "pid": record.args["p"],
+        }
 
 
 class JsonErrorFormatter(json_log_formatter.JSONFormatter):

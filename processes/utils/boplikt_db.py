@@ -72,19 +72,18 @@ def _execute_query(sql, params):
     for attempt in range(2):
         conn = db_pool.getconn()
         try:
-            with conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        "SET LOCAL statement_timeout = %s",
-                        (_STATEMENT_TIMEOUT,),
-                    )
-                    cur.execute(sql, params)
-                    return cur.fetchall()
+            with conn, conn.cursor() as cur:
+                cur.execute(
+                    "SET LOCAL statement_timeout = %s",
+                    (_STATEMENT_TIMEOUT,),
+                )
+                cur.execute(sql, params)
+                return cur.fetchall()
         except (OperationalError, InterfaceError) as e:
             LOGGER.warning(
                 "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
             )
-        except Exception as e:
+        except Exception as e: # noqa: BLE001
             LOGGER.error("Databasefeil: %s", e)
             raise ProcessorExecuteError(
                 user_msg="En feil oppstod, prøv igjen senere."
