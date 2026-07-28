@@ -23,7 +23,7 @@ def get_matrikkel_client():
     if _matrikkel_client is None:
         try:
             _matrikkel_client = create_matrikkel_client()
-        except Exception as e: # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
             LOGGER.error(
                 "Kunne ikke opprette Matrikkel-klient (sjekk WSDL-URL og credentials): %s",
                 e,
@@ -91,7 +91,7 @@ def hent_matrikkelenhet_med_teiger(client, kommunenummer, gardsnummer, bruksnumm
         raise ProcessorExecuteError(
             user_msg="En feil oppstod, prøv igjen senere."
         ) from None
-    except Exception as e: # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         LOGGER.error("SOAP error (%s): %s", type(e).__name__, e)
         raise ProcessorExecuteError(
             user_msg="En feil oppstod, prøv igjen senere."
