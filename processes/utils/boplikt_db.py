@@ -59,7 +59,7 @@ def _get_pool():
                 user=os.environ.get("DB_USER", "postgres"),
                 password=os.environ.get("DB_PASSWORD", "postgres"),
             )
-        except Exception as e:
+        except Exception as e: # noqa: BLE001
             LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
             raise ProcessorExecuteError(
                 user_msg="En feil oppstod, prøv igjen senere."
