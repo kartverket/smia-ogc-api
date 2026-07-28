@@ -14,6 +14,7 @@ limit_request_body = int(os.environ.get("MAX_REQUEST_BODY_BYTES", str(512 * 1024
 accesslog = "-"
 errorlog = "-"
 
+
 class HealthCheckFilter(logging.Filter):
     def __init__(self, paths=("/health",)):
         super().__init__()
@@ -24,6 +25,8 @@ class HealthCheckFilter(logging.Filter):
             return record.args["U"] not in self.paths
         except (AttributeError, KeyError, TypeError):
             return True
+
+
 class JsonRequestFormatter(json_log_formatter.JSONFormatter):
     def json_record(
         self,
