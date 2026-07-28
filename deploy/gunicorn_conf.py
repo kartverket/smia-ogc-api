@@ -15,6 +15,18 @@ accesslog = "-"
 errorlog = "-"
 
 
+class HealthCheckFilter(logging.Filter):
+    def __init__(self, paths=("/health",)):
+        super().__init__()
+        self.paths = set(paths)
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            return record.args["U"] not in self.paths
+        except (AttributeError, KeyError, TypeError):
+            return True
+
+
 class JsonRequestFormatter(json_log_formatter.JSONFormatter):
     def json_record(
         self,
@@ -66,11 +78,18 @@ logconfig_dict = {
             "()": JsonErrorFormatter,
         },
     },
+    "filters": {
+        "healthcheck": {
+            "()": HealthCheckFilter,
+            "paths": ["/health"],
+        }
+    },
     "handlers": {
         "json_request": {
             "class": "logging.StreamHandler",
             "stream": sys.stdout,
             "formatter": "json_request",
+            "filters": ["healthcheck"],
         },
         "json_error": {
             "class": "logging.StreamHandler",
