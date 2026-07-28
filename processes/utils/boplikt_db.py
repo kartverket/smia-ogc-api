@@ -118,7 +118,7 @@ def sjekk_kommune_boplikt(kommunenummer):
         ProcessorExecuteError: Ved databasefeil.
     """
     cols = get_cols()
-    sql = f"SELECT {cols} FROM kommuneinfo.bopliktomraade WHERE kommunenummer = %s"
+    sql = f"SELECT {cols} FROM inndelinger.bopliktomraade WHERE kommunenummer = %s"
     rows = _execute_query(sql, (kommunenummer,))
     return [dict(zip(_COLUMNS, row)) for row in rows]
 
@@ -126,7 +126,7 @@ def sjekk_kommune_boplikt(kommunenummer):
 def sjekk_boplikt(geojson_geom, kommunenummer=None):
     """Sjekk om en GeoJSON-geometri treffer bopliktområder i databasen.
 
-    Kjører ST_Intersects og ST_Within mot kommuneinfo.bopliktomraade.
+    Kjører ST_Intersects og ST_Within mot inndelinger.bopliktomraade.
     Returnerer flat dict med boplikt (ja/nei/delvis) og materielle vilkår
     fra første treff.
     """
@@ -139,7 +139,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         )
         SELECT {cols},
                ST_Within(input.geom, omrade) AS is_within
-        FROM kommuneinfo.bopliktomraade, input
+        FROM inndelinger.bopliktomraade, input
         WHERE omrade && input.geom
           AND ST_Intersects(input.geom, omrade)
     """

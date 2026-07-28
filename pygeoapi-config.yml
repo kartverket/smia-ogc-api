@@ -68,7 +68,7 @@ resources:
                   dbname: ${DB_NAME:-postgres}
                   user: ${DB_USER}
                   password: ${DB_PASSWORD}
-                  search_path: [kommuneinfo]
+                  search_path: [inndelinger]
               id_field: kommunenummer
               table: bopliktomraade
               geom_field: omrade

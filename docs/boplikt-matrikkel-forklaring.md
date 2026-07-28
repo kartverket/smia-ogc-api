@@ -283,7 +283,7 @@ Funksjonen returnerer også:
 
 ```sql
 SELECT kommunenummer, fylkesnummer, delvis_boplikt, ...
-FROM kommuneinfo.bopliktomraade
+FROM inndelinger.bopliktomraade
 WHERE kommunenummer = %s
 ```
 
@@ -300,7 +300,7 @@ SELECT
     kommunenummer, delvis_boplikt, ...,
     ST_Within(input.geom, omrade) AS is_within
     --  ↑ Er geometrien HELT innenfor bopliktområdet?
-FROM kommuneinfo.bopliktomraade, input
+FROM inndelinger.bopliktomraade, input
 WHERE ST_Intersects(input.geom, omrade)
 --    ↑ Finn alle bopliktområder som overlapper (inkl. delvis)
 AND kommunenummer = %s
