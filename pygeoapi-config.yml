@@ -63,12 +63,13 @@ resources:
             - type: feature
               name: PostgreSQL
               data:
-                  host: ${DB_HOST}
+                  host: ${INNDELINGER_DB_HOST}
                   port: ${DB_PORT:-5432}
                   dbname: ${DB_NAME:-postgres}
-                  user: ${DB_USER}
-                  password: ${DB_PASSWORD}
-                  search_path: [inndelinger]
+                  user: ${INNDELINGER_DB_USER}
+                  password: ${INNDELINGER_DB_PASSWORD}
+                  search_path: 
+                    - ${DB_SCHEMA:-inndelinger}
               id_field: kommunenummer
               table: bopliktomraade
               geom_field: omrade

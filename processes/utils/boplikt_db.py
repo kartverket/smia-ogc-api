@@ -11,6 +11,8 @@ from pygeoapi.process.base import ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
 
+_DB_SCHEMA = os.environ.get("DB_SCHEMA", "inndelinger")
+
 
 class Column(StrEnum):
     GJELDER_KUN_DEL_AV_KOMMUNEN = "gjelderKunDelAvKommunen"
@@ -53,11 +55,11 @@ def _get_pool():
             _db_pool = ThreadedConnectionPool(
                 minconn=1,
                 maxconn=2,
-                host=os.environ.get("DB_HOST", "localhost"),
+                host=os.environ.get("INNDELINGER_DB_HOST", "localhost"),
                 port=os.environ.get("DB_PORT", "5432"),
                 dbname=os.environ.get("DB_NAME", "postgres"),
-                user=os.environ.get("DB_USER", "postgres"),
-                password=os.environ.get("DB_PASSWORD", "postgres"),
+                user=os.environ.get("INNDELINGER_DB_USER", "postgres"),
+                password=os.environ.get("INNDELINGER_DB_PASSWORD", "postgres"),
             )
         except Exception as e:  # noqa: BLE001
             LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
@@ -118,7 +120,7 @@ def sjekk_kommune_boplikt(kommunenummer):
         ProcessorExecuteError: Ved databasefeil.
     """
     cols = get_cols()
-    sql = f"SELECT {cols} FROM inndelinger.bopliktomraade WHERE kommunenummer = %s"
+    sql = f"SELECT {cols} FROM {_DB_SCHEMA}.bopliktomraade WHERE kommunenummer = %s"
     rows = _execute_query(sql, (kommunenummer,))
     return [dict(zip(_COLUMNS, row)) for row in rows]
 
@@ -139,7 +141,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         )
         SELECT {cols},
                ST_Within(input.geom, omrade) AS is_within
-        FROM inndelinger.bopliktomraade, input
+        FROM {_DB_SCHEMA}.bopliktomraade, input
         WHERE omrade && input.geom
           AND ST_Intersects(input.geom, omrade)
     """

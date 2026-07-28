@@ -24,11 +24,12 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_HOST: db
+      INNDELINGER_DB_HOST: db
       DB_PORT: "5432"
       DB_NAME: inndelinger
-      DB_USER: inndelinger
-      DB_PASSWORD: inndelinger
+      INNDELINGER_DB_USER: inndelinger
+      INNDELINGER_DB_PASSWORD: inndelinger
+      DB_SCHEMA: inndelinger
       PYGEOAPI_URL: http://localhost:5000
       OGC_API_KEY: testkey
       MATRIKKELEN_USERNAME: ${MATRIKKELEN_USERNAME:-}
