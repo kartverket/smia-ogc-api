@@ -1,4 +1,3 @@
-
 services:
   db:
     image: postgis/postgis:18-3.6
@@ -34,6 +33,7 @@ services:
       OGC_API_KEY: testkey
       MATRIKKELEN_USERNAME: ${MATRIKKELEN_USERNAME:-}
       MATRIKKELEN_PASSWORD: ${MATRIKKELEN_PASSWORD:-}
+      MATRIKKELEN_WELLKNOWN_URL: ${MATRIKKELEN_WELLKNOWN_URL:-}
     ports:
       - "5000:5000"
       - "8181:8181"
