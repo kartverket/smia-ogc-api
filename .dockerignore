@@ -9,6 +9,7 @@ __pycache__/
 
 dev/
 docs/
+tests/
 compose.yaml
 *.md
 .security
