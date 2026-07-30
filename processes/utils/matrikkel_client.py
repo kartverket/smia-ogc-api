@@ -102,9 +102,7 @@ class MatrikkelTokenAuth(AuthBase):
         self._refresh_expires_at = (
             now + payload.get("refresh_expires_in", 0) - EXPIRY_MARGIN_SECONDS
         )
-        LOGGER.debug(
-            "Hentet nytt Matrikkel-token (grant_type=%s)", data["grant_type"]
-        )
+        LOGGER.debug("Hentet nytt Matrikkel-token (grant_type=%s)", data["grant_type"])
         return self._access_token
 
     def _get_token_endpoint(self):
@@ -129,7 +127,7 @@ class MatrikkelTokenAuth(AuthBase):
         LOGGER.info("Fikk 401 fra Matrikkel — henter nytt token og prøver på nytt.")
         self._invalidate()
 
-        response.content  # tømmer socketen så tilkoblingen kan gjenbrukes
+        _ = response.content  # tømmer socketen så tilkoblingen kan gjenbrukes
         response.close()
 
         retry = response.request.copy()
