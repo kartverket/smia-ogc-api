@@ -10,3 +10,8 @@ wheels/
 .venv
 /.idea
 .envrc
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
