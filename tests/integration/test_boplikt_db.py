@@ -66,7 +66,7 @@ def test_kolonner_matcher_koden():
     rader = boplikt_db._execute_query(
         "SELECT column_name FROM information_schema.columns "
         "WHERE table_schema = %s AND table_name = %s",
-        ("inndelinger", "bopliktomraade"),
+        (boplikt_db._DB_SCHEMA, "bopliktomraade"),
     )
 
     faktiske_kolonner = {rad[0] for rad in rader}

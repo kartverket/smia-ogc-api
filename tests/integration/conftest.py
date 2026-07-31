@@ -7,9 +7,12 @@ from testcontainers.community.postgres import PostgresContainer
 from processes.utils import boplikt_db
 
 ROT = Path(__file__).parents[2]
-SCHEMA = "inndelinger"
 SEED = ROT / "dev" / "init-db.sql"
 POSTGIS_IMAGE = "postgis/postgis:18-3.6"
+DB_SCHEMA = "inndelinger"
+DB_NAME = "boplikt_db"
+DB_USER = "boplikt_user"
+DB_PASSWORD = "boplikt_pass"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -18,9 +21,9 @@ def postgis():
     with (
         PostgresContainer(
             POSTGIS_IMAGE,
-            username=SCHEMA,
-            password=SCHEMA,
-            dbname=SCHEMA,
+            username=DB_USER,
+            password=DB_PASSWORD,
+            dbname=DB_NAME,
         ) as container,
         pytest.MonkeyPatch.context() as mp,
     ):
@@ -34,7 +37,7 @@ def postgis():
         mp.setenv("DB_NAME", container.dbname)
         mp.setenv("INNDELINGER_DB_USER", container.username)
         mp.setenv("INNDELINGER_DB_PASSWORD", container.password)
-        mp.setattr(boplikt_db, "_DB_SCHEMA", SCHEMA)
+        mp.setattr(boplikt_db, "_DB_SCHEMA", DB_SCHEMA)
 
         yield container
 
