@@ -10,7 +10,10 @@ env:
   SMIA_APPS_VERSION_FILE: env/atkv3-dev/smia-tjenester-main/smia-ogc-api-version
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
   build:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
