@@ -87,12 +87,16 @@ er tilgjengelig) og starter gunicorn.
 
 ## Testing
 
-Prosjektet bruker [pytest](https://docs.pytest.org/). Testene ligger i `tests/`.
+Prosjektet bruker [pytest](https://docs.pytest.org/). Testene ligger i `tests/`. Enhetstester i
+`tests/unit/` og integrasjonstester i `tests/integration/`.
 
 ```bash
+uv run pytest -m "not integration"                                    # kun enhetstester
 uv run pytest                                                         # alle tester
 uv run pytest --cov=processes --cov=deploy --cov-report=term-missing  # med coverage
 ```
+
+Integrasjonstestene starter en `postgis`-container med [testcontainers](https://testcontainers-python.readthedocs.io/).
 
 Testene kjøres i CI på hver pull request og ved merge til `main`, se `.github/workflows/test.yml`. Coverage rapporteres i CI-loggen, men ingen terskel feiler bygget.
 

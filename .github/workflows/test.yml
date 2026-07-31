@@ -5,6 +5,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -15,5 +16,7 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --locked
-      - name: Run tests
+      - name: Run unit tests
+        run: uv run pytest -m "not integration" --cov=processes --cov=deploy --cov-report=
+      - name: Run integration tests
         run: uv run pytest --cov=processes --cov=deploy --cov-report=term-missing
