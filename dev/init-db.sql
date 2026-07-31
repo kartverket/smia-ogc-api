@@ -2,46 +2,89 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE SCHEMA IF NOT EXISTS inndelinger;
 
 CREATE TABLE inndelinger.bopliktomraade (
-    kommunenummer        text PRIMARY KEY,
-    delvis_boplikt       boolean NOT NULL,
-    bebygd_eiendom       text,
-    helaarsbolig         text,
-    ubebygd_tomt         text,
-    slektskapsunntak     text,
-    andre_avgrensninger  text,
-    usikker_avgrensning  boolean,
-    omrade               geometry(MultiPolygon, 25833) NOT NULL
+    kommunenummer                    text PRIMARY KEY,
+    "gjelderKunDelAvKommunen"        boolean NOT NULL,
+    "gjelderForBruktSomHelarsbolig"  boolean,
+    "gjelderForBoligIkkeTattIBruk"   boolean,
+    "gjelderForUbebygdBoligtomt"     boolean,
+    "harUnntakFraSlektskapsunntak"   boolean,
+    "andreLokaleAvgrensninger"       text,
+    "harUsikkerAvgrensning"          boolean,
+    omrade                           geometry(MultiPolygon, 25833) NOT NULL
 );
 
 CREATE INDEX bopliktomraade_omrade_gix
     ON inndelinger.bopliktomraade USING gist (omrade);
 
--- 1) Område som dekker eksempel-geometrien i bopliktsjekk_geometri.py
-INSERT INTO inndelinger.bopliktomraade VALUES (
-    '4601', true,
-    'Gjelder', 'Gjelder', 'Gjelder ikke', 'Gjelder',
-    NULL, false,
+-- Område som dekker eksempel-geometrien i bopliktsjekk_geometri.py
+INSERT INTO inndelinger.bopliktomraade (
+    kommunenummer,
+    "gjelderKunDelAvKommunen",
+    "gjelderForBruktSomHelarsbolig",
+    "gjelderForBoligIkkeTattIBruk",
+    "gjelderForUbebygdBoligtomt",
+    "harUnntakFraSlektskapsunntak",
+    "andreLokaleAvgrensninger",
+    "harUsikkerAvgrensning",
+    omrade
+) VALUES (
+    '4601', true, true, true, false, true, NULL, false,
     ST_Multi(ST_GeomFromText(
         'POLYGON((68900 6627300, 69100 6627300, 69100 6627400, 68900 6627400, 68900 6627300))',
         25833))
 );
 
--- 2) Full boplikt for hele kommunen
-INSERT INTO inndelinger.bopliktomraade VALUES (
-    '0301', false,
-    'Gjelder', 'Gjelder', 'Gjelder', 'Gjelder ikke',
-    NULL, false,
+
+-- Full boplikt for hele kommunen
+INSERT INTO inndelinger.bopliktomraade (
+    kommunenummer,
+    "gjelderKunDelAvKommunen",
+    "gjelderForBruktSomHelarsbolig",
+    "gjelderForBoligIkkeTattIBruk",
+    "gjelderForUbebygdBoligtomt",
+    "harUnntakFraSlektskapsunntak",
+    "andreLokaleAvgrensninger",
+    "harUsikkerAvgrensning",
+    omrade
+) VALUES (
+    '0301', false, true, true, true, false, NULL, false,
     ST_Multi(ST_GeomFromText(
         'POLYGON((260000 6650000, 261000 6650000, 261000 6651000, 260000 6651000, 260000 6650000))',
         25833))
 );
 
--- 3) Område med usikker avgrensning
-INSERT INTO inndelinger.bopliktomraade VALUES (
-    '1806', true,
-    'Gjelder ikke', 'Gjelder', 'Gjelder', 'Gjelder',
-    'Avgrensning under revisjon.', true,
+-- Område med usikker avgrensning
+INSERT INTO inndelinger.bopliktomraade (
+    kommunenummer,
+    "gjelderKunDelAvKommunen",
+    "gjelderForBruktSomHelarsbolig",
+    "gjelderForBoligIkkeTattIBruk",
+    "gjelderForUbebygdBoligtomt",
+    "harUnntakFraSlektskapsunntak",
+    "andreLokaleAvgrensninger",
+    "harUsikkerAvgrensning",
+    omrade
+) VALUES (
+    '1806', true, true, false, true, true, 'Avgrensning under revisjon.', true,
     ST_Multi(ST_GeomFromText(
         'POLYGON((599500 7596500, 600500 7596500, 600500 7597500, 599500 7597500, 599500 7596500))',
+        25833))
+);
+
+-- Naboområde som deler grense med 4601 i x=69100.
+INSERT INTO inndelinger.bopliktomraade (
+    kommunenummer,
+    "gjelderKunDelAvKommunen",
+    "gjelderForBruktSomHelarsbolig",
+    "gjelderForBoligIkkeTattIBruk",
+    "gjelderForUbebygdBoligtomt",
+    "harUnntakFraSlektskapsunntak",
+    "andreLokaleAvgrensninger",
+    "harUsikkerAvgrensning",
+    omrade
+) VALUES (
+    '4602', true, true, false, false, false, NULL, false,
+    ST_Multi(ST_GeomFromText(
+        'POLYGON((69100 6627300, 69300 6627300, 69300 6627400, 69100 6627400, 69100 6627300))',
         25833))
 );
