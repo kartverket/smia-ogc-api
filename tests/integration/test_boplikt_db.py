@@ -48,6 +48,19 @@ UTENFOR = {
     ],
 }
 
+KRYSSER_TO_OMRADER = {
+    "type": "Polygon",
+    "coordinates": [
+        [
+            [68950, 6627320],
+            [69150, 6627320],
+            [69150, 6627360],
+            [68950, 6627360],
+            [68950, 6627320],
+        ]
+    ],
+}
+
 
 def test_kolonner_matcher_koden():
     rader = boplikt_db._execute_query(
@@ -87,3 +100,14 @@ def test_geometri_krysser_grense_gir_delvis():
     resultat = sjekk_boplikt(KRYSSER_GRENSE)
 
     assert resultat["iBopliktomrade"] == "DELVIS"
+
+
+def test_geometri_krysser_to_omrader_gir_delvis():
+    resultat = sjekk_boplikt(KRYSSER_TO_OMRADER)
+
+    assert resultat["iBopliktomrade"] == "DELVIS"
+
+
+def test_filtrering_paa_kommunenummer_utelukker_naboomrade():
+    assert sjekk_boplikt(HELT_INNENFOR, kommunenummer="4602")["iBopliktomrade"] == "NEI"
+    assert sjekk_boplikt(HELT_INNENFOR, kommunenummer="4601")["iBopliktomrade"] == "JA"
