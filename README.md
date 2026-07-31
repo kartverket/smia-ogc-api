@@ -85,6 +85,17 @@ docker build -f deploy/Dockerfile -t smia-ogc-api:test .
 Ved oppstart genererer `deploy/start.py` OpenAPI-spesifikasjonen mot databasen (krever at databasen
 er tilgjengelig) og starter gunicorn.
 
+## Testing
+
+Prosjektet bruker [pytest](https://docs.pytest.org/). Testene ligger i `tests/`.
+
+```bash
+uv run pytest                                                         # alle tester
+uv run pytest --cov=processes --cov=deploy --cov-report=term-missing  # med coverage
+```
+
+Testene kjøres i CI på hver pull request og ved merge til `main`, se `.github/workflows/test.yml`. Coverage rapporteres i CI-loggen, men ingen terskel feiler bygget.
+
 ## Linting og formatering
 
 Prosjektet bruker [Ruff](https://docs.astral.sh/ruff/) for linting og formatering.
