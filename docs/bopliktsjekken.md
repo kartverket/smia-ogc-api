@@ -1,17 +1,5 @@
 # Bopliktsjekken
 
-## Geometri som input
-
-Tar inn geometri og sjekker den mot alle bopliktområdene.
-
-```mermaid
-flowchart TD
-    A[Input: GeoJSON-geometri i EPSG:25833] --> B[Romlig sjekk mot bopliktområder]
-    B --> C[Return: iBopliktomrade=NEI]
-    B --> D[Return: iBopliktomrade=JA med materielle vilkår]
-    B --> E[Return: iBopliktomrade=DELVIS med materielle vilkår]
-```
-
 ## Matrikkelsnummer som input
 
 ```mermaid
