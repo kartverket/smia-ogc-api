@@ -140,7 +140,8 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
             SELECT ST_SetSRID(ST_GeomFromGeoJSON(%s), 25833) AS geom
         )
         SELECT {cols},
-               ST_Within(input.geom, omrade) AS is_within
+               ST_Within(input.geom, omrade) AS is_within,
+               ST_Area(ST_Intersection(input.geom, omrade)) / NULLIF(ST_Area(input.geom), 0) * 100 AS overlap_pct
         FROM {_DB_SCHEMA}.bopliktomraade, input
         WHERE omrade && input.geom
           AND ST_Intersects(input.geom, omrade)
@@ -156,11 +157,20 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     if not rows:
         return {"iBopliktomrade": "NEI"}
 
-    all_within = all(row[-1] for row in rows)
+    all_within = all(is_within for *_attrs, is_within, _overlap_pct in rows)
     if len(rows) > 1 or not all_within:
         boplikt = "DELVIS"
+        total_overlap_pct = sum(
+            overlap_pct
+            for *_attrs, _is_within, overlap_pct in rows
+            if overlap_pct is not None
+        )
+        LOGGER.info(
+            "Delvis boplikt: %.2f%% av eiendommen overlapper med bopliktområde(r)",
+            total_overlap_pct,
+        )
     else:
         boplikt = "JA"
 
-    first = dict(zip(_COLUMNS, rows[0][:-1]))
+    first = dict(zip(_COLUMNS, rows[0][: len(_COLUMNS)]))
     return bygg_boplikt_resultat(boplikt, first)
