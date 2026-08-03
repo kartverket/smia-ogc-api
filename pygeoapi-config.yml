@@ -77,11 +77,6 @@ resources:
                   - http://www.opengis.net/def/crs/EPSG/0/25833
               storage_crs: http://www.opengis.net/def/crs/EPSG/0/25833
 
-    bopliktsjekk-geometri:
-        type: process
-        processor:
-            name: processes.bopliktsjekk_geometri.BopliktSjekkGeometriProcessor
-
     bopliktsjekk:
         type: process
         processor:

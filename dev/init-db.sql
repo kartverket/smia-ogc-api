@@ -16,7 +16,6 @@ CREATE TABLE inndelinger.bopliktomraade (
 CREATE INDEX bopliktomraade_omrade_gix
     ON inndelinger.bopliktomraade USING gist (omrade);
 
--- Område som dekker eksempel-geometrien i bopliktsjekk_geometri.py
 INSERT INTO inndelinger.bopliktomraade (
     kommunenummer,
     "gjelderKunDelAvKommunen",
