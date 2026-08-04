@@ -1,17 +1,5 @@
 # Bopliktsjekken
 
-## Geometri som input
-
-Tar inn geometri og sjekker den mot alle bopliktområdene.
-
-```mermaid
-flowchart TD
-    A[Input: GeoJSON-geometri i EPSG:25833] --> B[Romlig sjekk mot bopliktområder]
-    B --> C[Return: iBopliktomrade=NEI]
-    B --> D[Return: iBopliktomrade=JA med materielle vilkår]
-    B --> E[Return: iBopliktomrade=DELVIS med materielle vilkår]
-```
-
 ## Matrikkelsnummer som input
 
 ```mermaid
@@ -58,7 +46,7 @@ Prod-databasen har `max_connections = 300`.
 
 ## Bopliktsjekk: OGC-process
 
-- Custom OGC-process som tar inn geometri eller matrikkelsnummer og sjekker mot bopliktområder
+- Custom OGC-process som tar inn matrikkelsnummer og sjekker mot bopliktområder
 - Kan både gjøre kall mot database og andre api-er som Matrikkel API.
 - Vi styrer hva som blir returnert i svaret
 - F.eks hvilke felter som skal være med i svaret, og hvordan resultatet skal struktureres

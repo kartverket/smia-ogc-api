@@ -1,8 +1,8 @@
 # Administrative inndelinger OGC API
 
 OGC API for Administrative inndelinger bygd med [pygeoapi](https://pygeoapi.io/). Tjenesten deler
-data fra Kartverket som OGC API Features og tilbyr en OGC API Process for bopliktsjekk — sjekk om en
-eiendom eller geometri ligger innenfor et bopliktområde.
+data fra Kartverket som OGC API Features og tilbyr en OGC API Process for bopliktsjekk som sjekker om en
+eiendom ligger innenfor et bopliktområde.
 
 ## Oppsett
 
