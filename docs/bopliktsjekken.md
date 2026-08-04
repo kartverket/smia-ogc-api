@@ -46,7 +46,7 @@ Prod-databasen har `max_connections = 300`.
 
 ## Bopliktsjekk: OGC-process
 
-- Custom OGC-process som tar inn geometri eller matrikkelsnummer og sjekker mot bopliktområder
+- Custom OGC-process som tar inn matrikkelsnummer og sjekker mot bopliktområder
 - Kan både gjøre kall mot database og andre api-er som Matrikkel API.
 - Vi styrer hva som blir returnert i svaret
 - F.eks hvilke felter som skal være med i svaret, og hvordan resultatet skal struktureres
