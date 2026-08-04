@@ -157,7 +157,11 @@ def test_delvis_boplikt_filtrerer_paa_kommunenummer(prosessor, db, matrikkel):
 
     prosessor.execute(INPUT)
 
-    db.sjekk_boplikt.assert_called_once_with(TEIG, KOMMUNENUMMER)
+    db.sjekk_boplikt.assert_called_once_with(
+        TEIG,
+        KOMMUNENUMMER,
+        matrikkelnummer=f"{KOMMUNENUMMER}-{GARDSNUMMER}/{BRUKSNUMMER}/0/0",
+    )
 
 
 def test_manglende_teiggeometri_gir_feil(prosessor, db, matrikkel):
