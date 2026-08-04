@@ -141,7 +141,10 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
         )
         SELECT {cols},
                ST_Within(input.geom, omrade) AS is_within,
-               ST_Area(ST_Intersection(input.geom, omrade)) / NULLIF(ST_Area(input.geom), 0) * 100 AS overlap_pct
+               ST_Area(input.geom) as teig_m2,
+               ST_Area(
+                ST_Intersection(input.geom, ST_Union(omrade) OVER ())
+             ) as overlap_m2
         FROM {_DB_SCHEMA}.bopliktomraade, input
         WHERE omrade && input.geom
           AND ST_Intersects(input.geom, omrade)
@@ -157,20 +160,38 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     if not rows:
         return {"iBopliktomrade": "NEI"}
 
-    all_within = all(is_within for *_attrs, is_within, _overlap_pct in rows)
+    all_within = all(row[len(_COLUMNS)] for row in rows)
     if len(rows) > 1 or not all_within:
         boplikt = "DELVIS"
-        total_overlap_pct = sum(
-            overlap_pct
-            for *_attrs, _is_within, overlap_pct in rows
-            if overlap_pct is not None
-        )
-        LOGGER.info(
-            "Delvis boplikt: %.2f%% av eiendommen overlapper med bopliktområde(r)",
-            total_overlap_pct,
-        )
+        _register_delvis_overlapp(rows[0], all_within, kommunenummer, len(rows))
     else:
         boplikt = "JA"
 
     first = dict(zip(_COLUMNS, rows[0][: len(_COLUMNS)]))
     return bygg_boplikt_resultat(boplikt, first)
+
+
+def _register_delvis_overlapp(row, all_within, kommunenummer, antall_omrader):
+    """Logger hvor mye av teigen som ligger i bopliktomraadet"""
+
+    teig_m2, overlap_m2 = row[-2:]
+    utenfor_m2 = max(0.0, teig_m2 - overlap_m2)
+    overlap_pct = overlap_m2 / teig_m2 * 100 if teig_m2 > 0 else None
+    aarsak = "flere_omrader" if antall_omrader > 1 else "krysser_grense"
+
+    LOGGER.info(
+        "Delvis boplikt: %s %% av geometrien i bopliktområdet, årsak %s",
+        overlap_pct,
+        aarsak,
+        extra={
+            "hendelse": "delvis_boplikt_overlapp",
+            "kommunenummer": kommunenummer,
+            "aarsak": aarsak,
+            "teig_m2": teig_m2,
+            "overlap_m2": overlap_m2,
+            "utenfor_m2": utenfor_m2,
+            "overlap_pct": overlap_pct,
+            "antall_omrader": antall_omrader,
+            "all_innenfor": all_within,
+        },
+    )
