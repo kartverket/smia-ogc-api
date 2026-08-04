@@ -132,7 +132,7 @@ class BopliktSjekkProcessor(BaseProcessor):
                 "Kontroller at kommunenummer, gårdsnummer og bruksnummer er korrekt."
             )
 
-        result = sjekk_boplikt(geom, kommunenummer)
+        result = sjekk_boplikt(geom, kommunenummer, matrikkelnummer=mnr)
         LOGGER.info(
             "Bopliktsjekk fullført for %s, iBopliktomrade: %s",
             mnr,

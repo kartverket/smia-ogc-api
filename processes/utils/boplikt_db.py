@@ -125,7 +125,7 @@ def sjekk_kommune_boplikt(kommunenummer):
     return [dict(zip(_COLUMNS, row)) for row in rows]
 
 
-def sjekk_boplikt(geojson_geom, kommunenummer=None):
+def sjekk_boplikt(geojson_geom, kommunenummer=None, matrikkelnummer=None):
     """Sjekk om en GeoJSON-geometri treffer bopliktområder i databasen.
 
     Kjører ST_Intersects og ST_Within mot inndelinger.bopliktomraade.
@@ -136,18 +136,21 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     cols = get_cols()
 
     sql = f"""
-        WITH input AS (
+        WITH raa_input AS (
             SELECT ST_SetSRID(ST_GeomFromGeoJSON(%s), 25833) AS geom
+        ),
+        input AS (
+            SELECT geom, ST_MakeValid(geom) AS geom_gyldig FROM raa_input
         )
         SELECT {cols},
-               ST_Within(input.geom, omrade) AS is_within,
-               ST_Area(input.geom) as teig_m2,
+               ST_Within(input.geom_gyldig, omrade) AS is_within,
+               ST_Area(input.geom_gyldig) as teig_m2,
                ST_Area(
-                ST_Intersection(input.geom, ST_Union(omrade) OVER ())
+                ST_Intersection(input.geom_gyldig, ST_Union(omrade) OVER ())
              ) as overlap_m2
         FROM {_DB_SCHEMA}.bopliktomraade, input
-        WHERE omrade && input.geom
-          AND ST_Intersects(input.geom, omrade)
+        WHERE omrade && input.geom_gyldig
+          AND ST_Intersects(input.geom_gyldig, omrade)
     """
     params = [geojson_str]
 
@@ -163,7 +166,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     all_within = all(row[len(_COLUMNS)] for row in rows)
     if len(rows) > 1 or not all_within:
         boplikt = "DELVIS"
-        _register_delvis_overlapp(rows[0], all_within, kommunenummer, len(rows))
+        _register_delvis_overlapp(rows[0], all_within, len(rows), matrikkelnummer)
     else:
         boplikt = "JA"
 
@@ -171,7 +174,7 @@ def sjekk_boplikt(geojson_geom, kommunenummer=None):
     return bygg_boplikt_resultat(boplikt, first)
 
 
-def _register_delvis_overlapp(row, all_within, kommunenummer, antall_omrader):
+def _register_delvis_overlapp(row, all_within, antall_omrader, matrikkelnummer):
     """Logger hvor mye av teigen som ligger i bopliktomraadet"""
 
     teig_m2, overlap_m2 = row[-2:]
@@ -185,7 +188,7 @@ def _register_delvis_overlapp(row, all_within, kommunenummer, antall_omrader):
         aarsak,
         extra={
             "hendelse": "delvis_boplikt_overlapp",
-            "kommunenummer": kommunenummer,
+            "matrikkelnummer": matrikkelnummer,
             "aarsak": aarsak,
             "teig_m2": teig_m2,
             "overlap_m2": overlap_m2,
