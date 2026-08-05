@@ -1,0 +1,244 @@
+name: "pharos-action"
+branding:
+  icon: "compass"
+  color: "blue"
+description: "GitHub action for running different Security Scans, that should be run before deploying to SKIP"
+# Forked from kartverket/pharos@e5a5cf71dd41384d6d62c7d9b387851c0457e81b (v0.6.4) to add ignore_unfixed input
+inputs:
+  image_url:
+    description: "An image_url of the form registry/repository:tag or registry/repository@digest"
+    required: false
+  trivy:
+    description: "A boolean which determines whether or not Trivy vulnerability scan will be run. Defaults to true"
+    required: false
+    default: "true"
+  tfsec:
+    description: "A boolean which determines whether or not TFSec security scan will be run. Defaults to true"
+    required: false
+    default: "true"
+  allow_severity_level:
+    description: "A string which determines the highest level of severity the security scans can find while still succeeding workflows. Only `medium`, `high` and `critical` are allowed as input strings. Note that these values are case sensitive."
+    required: false
+    default: medium
+  disable_severity_check:
+    description: "Skip checking severity of scan results. Useful when running the action ad-hoc to update the Github security status."
+    required: false
+    default: "false"
+  trivy_category:
+    description: "A category for describing the Trivy action. Useful for differentiating between different runs of different images."
+    required: false
+    default: "Trivy"
+  scan_platform_modules:
+    description: "If you need to use terraform platform modules (github.com/kartverket/terraform-modules)"
+    required: false
+    default: "false"
+  skip_dirs:
+    description: "Comma seperated list of directories where traversal is skipped"
+    required: false
+    default: ""
+  skip_files:
+    description: "Comma seperated list of files where traversal is skipped"
+    required: false
+    default: "catalog-info.yaml"
+  ignore_unfixed:
+    description: "If true, ignore vulnerabilities without a fix available"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
+      if: inputs.scan_platform_modules == 'true'
+      id: octo-sts
+      with:
+        scope: kartverket
+        identity: kartverket_repos
+
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        persist-credentials: false
+        submodules: ${{ inputs.checkout_submodules == 'true' && 'recursive' || 'false' }}
+        token: ${{ inputs.checkout_submodules == 'true' && steps.octo-sts.outputs.token || github.token }}
+
+    - name: hack for github internal repo access
+      if: inputs.scan_platform_modules == 'true'
+      run: git config --global url."https://x-access-token:${OCTO_STS_TOKEN}@github.com".insteadOf ssh://git@github.com
+      shell: bash
+      env:
+        OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
+
+    - name: Check If Both Scans Disabled
+      if: (inputs.trivy == 'false' || inputs.image_url == '') && inputs.tfsec == 'false'
+      shell: bash
+      run: |
+        echo "Error: TFSec is disabled and Trivy was either disabled or an image url was not set. Exiting."
+        exit 1;
+
+    - name: Check If Allowed Severity Level
+      if: inputs.allow_severity_level != 'medium' && inputs.allow_severity_level != 'high' && inputs.allow_severity_level != 'critical'
+      shell: bash
+      env:
+        ALLOW_SEVERITY_LEVEL: ${{ inputs.allow_severity_level }}
+      run: |
+        echo "Error: The input 'allow_severity_level' was not one of the allowed strings, 'high', 'critical' or 'medium'. Found: "$ALLOW_SEVERITY_LEVEL".";
+        exit 1;
+
+    #
+    # Trivy config scan (previously TFsec)
+    #
+
+    - name: Run Trivy config scan
+      if: inputs.tfsec == 'true'
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        scan-type: "config"
+        format: sarif
+        output: trivy-config.sarif
+        severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+        timeout: 15m
+        skip-dirs: ${{ inputs.skip_dirs }}
+        skip-files: ${{ inputs.skip_files }}
+
+    - name: Upload SARIF file
+      if: inputs.tfsec == 'true'
+      uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+      with:
+        sarif_file: trivy-config.sarif
+        category: trivy-config
+
+    #
+    # Trivy
+    #
+
+    - name: Log Into GHCR Registry with Token
+      if: inputs.trivy == 'true' && inputs.image_url != ''
+      uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+    - name: Pull Image to Scan from Docker
+      if: inputs.trivy == 'true' && inputs.image_url != ''
+      env:
+        IMAGE_URL: ${{ inputs.image_url }}
+      shell: bash
+      run: docker pull "$IMAGE_URL"
+
+    - name: Run Trivy Vulnerability Scanner on Image
+      if: inputs.trivy == 'true' && inputs.image_url != ''
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        image-ref: ${{ inputs.image_url }}
+        format: sarif
+        output: trivy-results.sarif
+        severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+        timeout: 15m
+        # No need to setup Trivy again, if the config scan is enabled and ran first
+        skip-setup-trivy: ${{ inputs.tfsec == 'true' }}
+        ignore-unfixed: ${{ inputs.ignore_unfixed }}
+
+    - name: Upload Trivy Scan Results to GitHub Security Tab
+      if: inputs.trivy == 'true' && inputs.image_url != ''
+      uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+      with:
+        sarif_file: trivy-results.sarif
+        category: ${{ inputs.trivy_category }}
+
+    #
+    # Check results
+    #
+
+    - name: Set high and critical severity outputs
+      if: inputs.disable_severity_check != 'true'
+      id: severity_check_outputs
+      shell: bash
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_TOKEN: ${{ github.token }}
+        SCAN_CATEGORY: ${{ inputs.trivy_category }}
+      run: |
+        content_header="Accept: application/vnd.github+json"
+        auth_header="Authorization: Bearer $GITHUB_TOKEN"
+        base_url="https://api.github.com/repos/$GITHUB_REPOSITORY/code-scanning/alerts"
+        query_params="?ref=$GITHUB_REF&state=open&per_page=100"
+        alerts_file="alerts.json"
+
+        curl -s -H "$content_header" -H "$auth_header" "${base_url}${query_params}" > "$alerts_file"
+
+        high_count=$(jq --arg category "$SCAN_CATEGORY" 'map(select(.most_recent_instance.category == $category and .rule.security_severity_level == "high")) | length' "$alerts_file")
+        critical_count=$(jq --arg category "$SCAN_CATEGORY" 'map(select(.most_recent_instance.category == $category and(.rule.security_severity_level == "critical" or .rule.security_severity_level == "error"))) | length' "$alerts_file")
+
+        rm $alerts_file
+
+        echo "is_high_vuln_present=$([ "$high_count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        echo "is_critical_vuln_present=$([ "$critical_count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+    - name: Succeed or fail based on severity
+      if: inputs.disable_severity_check != 'true'
+      id: severity_check
+      shell: bash
+      env:
+        REF_NAME: ${{ github.ref_name }}
+        ALLOW_SEVERITY_LEVEL: ${{ inputs.allow_severity_level }}
+        IS_HIGH_VULN_PRESENT: ${{ steps.severity_check_outputs.outputs.is_high_vuln_present }}
+        IS_CRITICAL_VULN_PRESENT: ${{ steps.severity_check_outputs.outputs.is_critical_vuln_present }}
+      run: |
+        pr_number=$( echo $REF_NAME | sed 's/\/.*//');
+        error_start_message="Error: Vulnerabilities were found of level"
+        error_end_message="Go to the Code Scanning section of the GitHub Security tab to review these vulnerabilities."
+        error_search_pr_message="Search for is:open pr:"$pr_number" to find PR related vulnerabilities."
+        _message="Undefined. Bug in this action. Fix."
+        _exit_code=0
+
+        if [[ $IS_HIGH_VULN_PRESENT == 'false' &&  $IS_CRITICAL_VULN_PRESENT == 'false' ]]
+        then
+          _message="Success! No high or critical code scanning alerts."
+          _exit_code=0;
+        else
+          if [[ $ALLOW_SEVERITY_LEVEL == 'medium' ]]
+          then
+            if [[ ${{ github.event_name }} == 'pull_request' ]]
+            then
+              _message="$error_start_message high or critical. $error_end_message $error_search_pr_message";
+              _exit_code=1
+            else
+              _message="$error_start_message high or critical found on branch '$REF_NAME'. $error_end_message";
+              _exit_code=1;
+            fi
+
+          elif [[ $ALLOW_SEVERITY_LEVEL == 'high' ]]
+          then
+            if [[ $IS_CRITICAL_VULN_PRESENT == 'false' ]]
+            then
+              _message="Only high vulnerabilities detected! Allowing due to input ALLOW_SEVERITY_LEVEL being set to high.";
+              _exit_code=0;
+
+            elif [[ ${{ github.event_name }} == 'pull_request' ]]
+            then
+              _message="$error_start_message critical. $error_end_message $error_search_pr_message";
+              _exit_code=1
+            else
+              _message="$error_start_message critical found on '$REF_NAME' branch. $error_end_message";
+              _exit_code=1
+            fi
+
+          elif [[ $ALLOW_SEVERITY_LEVEL == 'critical' ]]
+          then
+            _message="High or critical vulnerabilities detected! Allowing due to input ALLOW_SEVERITY_LEVEL being set to critical.";
+            _exit_code=0;
+
+          else
+            _message="Input 'ALLOW_SEVERITY_LEVEL' was not one of the known values, found '$ALLOW_SEVERITY_LEVEL'. If you see this message, please contact SKIP.";
+            _exit_code=1
+          fi
+        fi
+
+        [[ ${_exit_code} -gt 0 ]] && _summary_prefix=":x: " || _summary_prefix=""
+        echo "${_message}";
+        echo "${_summary_prefix}${_message}" >> $GITHUB_STEP_SUMMARY;
+        exit ${_exit_code};
