@@ -77,6 +77,9 @@ def matrikkel(monkeypatch):
     return SimpleNamespace(
         client=client,
         get_matrikkel_client=stub(monkeypatch, "get_matrikkel_client", client),
+        hent_matrikkelenhet_med_teiger=stub(
+            monkeypatch, "hent_matrikkelenhet_med_teiger", None
+        ),
         hent_teiggeometri=stub(
             monkeypatch,
             "hent_teiggeometri",
@@ -102,8 +105,36 @@ def test_manglende_paakrevd_felt_gir_feil(prosessor, manglende_felt):
 
 
 def test_tomt_kommunenummer_gir_feil(prosessor):
-    with pytest.raises(ProcessorExecuteError, match="Mangler påkrevde felt"):
+    with pytest.raises(ProcessorExecuteError, match="Ugyldig kommunenummer"):
         prosessor.execute({**INPUT, "kommunenummer": ""})
+
+
+@pytest.mark.parametrize("kommunenummer", ["123", "12345", "abcd"])
+def test_ugyldig_kommunenummer_gir_feil(prosessor, kommunenummer):
+    with pytest.raises(ProcessorExecuteError, match="Ugyldig kommunenummer"):
+        prosessor.execute({**INPUT, "kommunenummer": kommunenummer})
+
+
+@pytest.mark.parametrize("gardsnummer", [0, -1])
+def test_ugyldig_gardsnummer_gir_feil(prosessor, gardsnummer):
+    with pytest.raises(ProcessorExecuteError, match="Ugyldig gårdsnummer"):
+        prosessor.execute({**INPUT, "gardsnummer": gardsnummer})
+
+
+@pytest.mark.parametrize("bruksnummer", [0, -1])
+def test_ugyldig_bruksnummer_gir_feil(prosessor, bruksnummer):
+    with pytest.raises(ProcessorExecuteError, match="Ugyldig bruksnummer"):
+        prosessor.execute({**INPUT, "bruksnummer": bruksnummer})
+
+
+def test_matrikkelnummer_som_ikke_finnes_gir_feil(prosessor, db, matrikkel):
+    db.sjekk_kommune_boplikt.return_value = []
+    matrikkel.hent_matrikkelenhet_med_teiger.side_effect = ProcessorExecuteError(
+        user_msg="Matrikkelenheten finnes ikke"
+    )
+
+    with pytest.raises(ProcessorExecuteError, match="finnes ikke"):
+        prosessor.execute(INPUT)
 
 
 def test_kommune_uten_boplikt_gir_nei(prosessor, db, matrikkel):
@@ -115,7 +146,9 @@ def test_kommune_uten_boplikt_gir_nei(prosessor, db, matrikkel):
     assert resultat == {"iBopliktomrade": "NEI"}
     db.sjekk_kommune_boplikt.assert_called_once_with(KOMMUNENUMMER)
     db.sjekk_boplikt.assert_not_called()
-    matrikkel.get_matrikkel_client.assert_not_called()
+    matrikkel.hent_matrikkelenhet_med_teiger.assert_called_once_with(
+        matrikkel.client, KOMMUNENUMMER, GARDSNUMMER, BRUKSNUMMER
+    )
 
 
 def test_full_boplikt_gir_ja_med_materielle_vilkaar(prosessor, db, matrikkel):
