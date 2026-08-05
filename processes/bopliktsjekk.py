@@ -51,11 +51,11 @@ def _valider_matrikkelnummer(kommunenummer, gardsnummer, bruksnummer):
         raise ProcessorExecuteError(
             user_msg=f"Ugyldig kommunenummer '{kommunenummer}': må være 4 siffer (f.eks. '3024')"
         )
-    if not isinstance(gardsnummer, int) or gardsnummer < 1:
+    if type(gardsnummer) is not int or gardsnummer < 1:
         raise ProcessorExecuteError(
             user_msg=f"Ugyldig gårdsnummer '{gardsnummer}': må være et heltall større enn 0"
         )
-    if not isinstance(bruksnummer, int) or bruksnummer < 1:
+    if type(bruksnummer) is not int or bruksnummer < 1:
         raise ProcessorExecuteError(
             user_msg=f"Ugyldig bruksnummer '{bruksnummer}': må være et heltall større enn 0"
         )

@@ -130,10 +130,10 @@ def test_ugyldig_bruksnummer_gir_feil(prosessor, bruksnummer):
 def test_matrikkelnummer_som_ikke_finnes_gir_feil(prosessor, db, matrikkel):
     db.sjekk_kommune_boplikt.return_value = []
     matrikkel.hent_matrikkelenhet_med_teiger.side_effect = ProcessorExecuteError(
-        user_msg="Matrikkelenheten finnes ikke"
+        user_msg="Matrikkelenheten ble ikke funnet."
     )
 
-    with pytest.raises(ProcessorExecuteError, match="finnes ikke"):
+    with pytest.raises(ProcessorExecuteError, match="ikke funnet"):
         prosessor.execute(INPUT)
 
 
