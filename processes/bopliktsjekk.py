@@ -28,7 +28,10 @@ from processes.utils.boplikt_db import (
     sjekk_kommune_boplikt,
 )
 from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
-from processes.utils.matrikkel_client import get_matrikkel_client, hent_matrikkelenhet_med_teiger
+from processes.utils.matrikkel_client import (
+    get_matrikkel_client,
+    hent_matrikkelenhet_med_teiger,
+)
 from processes.utils.matrikkel_geometry import hent_teiggeometri
 
 LOGGER = logging.getLogger(__name__)
