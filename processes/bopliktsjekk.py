@@ -17,6 +17,7 @@ Returnerer:
 """
 
 import logging
+import re
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
@@ -27,10 +28,35 @@ from processes.utils.boplikt_db import (
     sjekk_kommune_boplikt,
 )
 from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
-from processes.utils.matrikkel_client import get_matrikkel_client
+from processes.utils.matrikkel_client import get_matrikkel_client, hent_matrikkelenhet_med_teiger
 from processes.utils.matrikkel_geometry import hent_teiggeometri
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _valider_matrikkelnummer(kommunenummer, gardsnummer, bruksnummer):
+    """Valider format på matrikkelnummer-komponenter.
+
+    Raises:
+        ProcessorExecuteError: Ved ugyldig format.
+    """
+    if kommunenummer is None or gardsnummer is None or bruksnummer is None:
+        raise ProcessorExecuteError(
+            user_msg="Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
+        )
+    if not re.fullmatch(r"\d{4}", str(kommunenummer)):
+        raise ProcessorExecuteError(
+            user_msg=f"Ugyldig kommunenummer '{kommunenummer}': må være 4 siffer (f.eks. '3024')"
+        )
+    if not isinstance(gardsnummer, int) or gardsnummer < 1:
+        raise ProcessorExecuteError(
+            user_msg=f"Ugyldig gårdsnummer '{gardsnummer}': må være et heltall større enn 0"
+        )
+    if not isinstance(bruksnummer, int) or bruksnummer < 1:
+        raise ProcessorExecuteError(
+            user_msg=f"Ugyldig bruksnummer '{bruksnummer}': må være et heltall større enn 0"
+        )
+
 
 PROCESS_METADATA = {
     "version": "0.1.0",
@@ -91,10 +117,7 @@ class BopliktSjekkProcessor(BaseProcessor):
         gardsnummer = data.get("gardsnummer")
         bruksnummer = data.get("bruksnummer")
 
-        if not kommunenummer or gardsnummer is None or bruksnummer is None:
-            raise ProcessorExecuteError(
-                user_msg="Mangler påkrevde felt: kommunenummer, gardsnummer, bruksnummer"
-            )
+        _valider_matrikkelnummer(kommunenummer, gardsnummer, bruksnummer)
 
         mnr = f"{kommunenummer}-{gardsnummer}/{bruksnummer}/{0}/{0}"
         LOGGER.info("Bopliktsjekk startet for matrikkelenhet %s", mnr)
@@ -102,6 +125,13 @@ class BopliktSjekkProcessor(BaseProcessor):
         kommune_med_boplikt = sjekk_kommune_boplikt(kommunenummer)
 
         if not kommune_med_boplikt:
+            LOGGER.info(
+                "Kommune %s har ikke boplikt, validerer eksistens mot Matrikkel-API",
+                kommunenummer,
+            )
+            hent_matrikkelenhet_med_teiger(
+                get_matrikkel_client(), kommunenummer, gardsnummer, bruksnummer
+            )
             LOGGER.info("Kommune %s har ikke boplikt, returnerer INGEN", kommunenummer)
             return "application/json", {"iBopliktomrade": "NEI"}
 
