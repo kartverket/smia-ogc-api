@@ -213,6 +213,12 @@ def hent_matrikkelenhet_med_teiger(client, kommunenummer, gardsnummer, bruksnumm
             },
         )
     except zeep.exceptions.Fault as e:
+        if "finnes ikke" in (e.message or "").lower():
+            LOGGER.info("Matrikkelenhet ikke funnet: %s", e.message)
+            raise ProcessorExecuteError(
+                user_msg="Matrikkelenheten ble ikke funnet. "
+                "Kontroller at kommunenummer, gårdsnummer og bruksnummer er korrekt."
+            ) from None
         LOGGER.error("SOAP fault: %s", e)
         raise ProcessorExecuteError(
             user_msg="En feil oppstod, prøv igjen senere."
