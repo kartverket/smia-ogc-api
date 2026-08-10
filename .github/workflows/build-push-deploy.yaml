@@ -2,7 +2,7 @@ name: Build, push and deploy to ArgoCD
 
 on:
   push:
-    branches: ["main"]
+    branches: ["TS-3049-maskinporten"]
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -103,10 +103,10 @@ jobs:
 
           echo "### Deploying \"$IMAGEURL\"" >> $GITHUB_STEP_SUMMARY
           echo 'Deploy to dev? true' >> $GITHUB_STEP_SUMMARY
-          
+
           # Write the new version to the dev environment file
           echo "\"$IMAGEURL\"" > "$SMIA_APPS_VERSION_FILE"
-          
+
           git add "$SMIA_APPS_VERSION_FILE"
           if git diff --cached --quiet; then
             echo "No changes to commit"
