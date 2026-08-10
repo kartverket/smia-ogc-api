@@ -110,7 +110,10 @@ class MatrikkelTokenAuth(AuthBase):
         ):
             return response
 
-        LOGGER.info("Fikk 401 fra Matrikkel — henter nytt token og prøver på nytt.")
+        LOGGER.info(
+            "Fikk 401 fra Matrikkel — henter nytt token og prøver på nytt. Body: %s",
+            response.text,
+        )
         self._invalidate()
 
         _ = response.content  # tømmer socketen så tilkoblingen kan gjenbrukes
