@@ -17,7 +17,7 @@ from zeep import helpers
 from zeep.transports import Transport
 
 LOGGER = logging.getLogger(__name__)
-WSDL_URL = "https://matrikkel.no/matrikkelapi/wsapi/v1/MatrikkelenhetServiceWS?WSDL"
+WSDL_URL = "https://betatest.matrikkel.no/matrikkelapi/wsapi/v1/MatrikkelenhetServiceWS?WSDL"
 MASKINPORTEN_SCOPE = "kartverk:matrikkel:brukernavn"
 
 # Fornyer tokenet litt før det faktisk utløper
