@@ -48,6 +48,7 @@ class MatrikkelTokenAuth(AuthBase):
     def __call__(self, request):
         request.headers["Authorization"] = f"Bearer {self._get_token()}"
         request.headers["X-Matrikkel-Brukernavn"] = self._username
+        request.register_hook("response", self._log_error_response)
         request.register_hook("response", self._handle_401)
         return request
 
@@ -98,6 +99,16 @@ class MatrikkelTokenAuth(AuthBase):
             algorithm="RS256",
             headers={"kid": jwk["kid"]},
         )
+
+    def _log_error_response(self, response, **kwargs):
+        if response.status_code >= 400:
+            LOGGER.warning(
+                "Matrikkel HTTP %s %s: %s",
+                response.status_code,
+                response.request.url,
+                response.text[:500],
+            )
+        return response
 
     def _invalidate(self):
         with self._lock:
