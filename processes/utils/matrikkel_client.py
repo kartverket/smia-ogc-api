@@ -6,7 +6,6 @@ import os
 import threading
 import time
 import uuid
-from urllib.parse import urlparse
 
 import jwt
 import requests
@@ -33,11 +32,12 @@ class MatrikkelTokenAuth(AuthBase):
     Tokenet caches til det utløper — Maskinporten har ingen refresh_token.
     """
 
-    def __init__(self, username, client_id, jwk_json, token_url, resource, session=None):
+    def __init__(self, username, client_id, jwk_json, token_endpoint, issuer, resource, session=None):
         self._username = username
         self._client_id = client_id
         self._jwk_json = jwk_json
-        self._token_url = token_url
+        self._token_url = token_endpoint
+        self._issuer = issuer
         self._resource = resource
         self._session = session or requests.Session()
         self._lock = threading.Lock()
@@ -83,14 +83,11 @@ class MatrikkelTokenAuth(AuthBase):
         jwk = json.loads(self._jwk_json)
         private_key = jwt.algorithms.RSAAlgorithm.from_jwk(jwk)
         now = int(time.time())
-        # aud skal være issuer-URL (base), ikke token-endepunktet
-        parsed = urlparse(self._token_url)
-        issuer = f"{parsed.scheme}://{parsed.netloc}/"
         return jwt.encode(
             {
                 "iss": self._client_id,
                 "sub": self._client_id,
-                "aud": issuer,
+                "aud": self._issuer,
                 "scope": MASKINPORTEN_SCOPE,
                 "resource": self._resource,
                 "iat": now,
@@ -153,17 +150,18 @@ def create_matrikkel_client(wsdl=None):
     username = os.environ.get("MATRIKKELEN_USERNAME")
     client_id = os.environ.get("MASKINPORTEN_CLIENT_ID")
     jwk_json = os.environ.get("MASKINPORTEN_CLIENT_JWK")
-    token_url = os.environ.get("MASKINPORTEN_TOKEN_URL")
+    token_endpoint = os.environ.get("MASKINPORTEN_TOKEN_ENDPOINT")
+    issuer = os.environ.get("MASKINPORTEN_ISSUER")
     resource = os.environ.get("MASKINPORTEN_RESOURCE")
 
-    if not all([username, client_id, jwk_json, token_url, resource]):
+    if not all([username, client_id, jwk_json, token_endpoint, issuer, resource]):
         LOGGER.warning(
             "En eller flere Maskinporten-variabler er ikke satt — autentisering vil feile."
         )
 
     settings = zeep.Settings(strict=False, xml_huge_tree=True)
     session = Session()
-    session.auth = MatrikkelTokenAuth(username, client_id, jwk_json, token_url, resource)
+    session.auth = MatrikkelTokenAuth(username, client_id, jwk_json, token_endpoint, issuer, resource)
     transport = Transport(session=session)
     return zeep.Client(wsdl=wsdl, settings=settings, transport=transport)
 
