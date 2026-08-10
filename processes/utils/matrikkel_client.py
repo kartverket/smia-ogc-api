@@ -5,7 +5,10 @@ import logging
 import os
 import threading
 import time
+import uuid
+from urllib.parse import urlparse
 
+import jwt
 import requests
 import zeep
 from pygeoapi.process.base import ProcessorExecuteError
@@ -15,13 +18,8 @@ from zeep import helpers
 from zeep.transports import Transport
 
 LOGGER = logging.getLogger(__name__)
-
 WSDL_URL = "https://matrikkel.no/matrikkelapi/wsapi/v1/MatrikkelenhetServiceWS?WSDL"
-WELL_KNOWN_URL = (
-    "https://auth.matrikkel.no/auth/realms/matrikkelen-prod/"
-    ".well-known/openid-configuration"
-)
-CLIENT_ID = "matrikkel-token-exchange"
+MASKINPORTEN_SCOPE = "kartverk:matrikkel:brukernavn"
 
 # Fornyer tokenet litt før det faktisk utløper
 EXPIRY_MARGIN_SECONDS = 30
@@ -30,30 +28,26 @@ _matrikkel_client = None
 
 
 class MatrikkelTokenAuth(AuthBase):
-    """Legger ved `Authorization: Bearer <access_token>` på hver forespørsel.
+    """Legger ved Bearer-token fra Maskinporten og X-Matrikkel-Brukernavn på hver forespørsel.
 
-    Tokenet caches og fornyes automatisk:
-      1. Gjenbruk access_token hvis det fortsatt er gyldig.
-      2. Forny med refresh_token hvis access_token er utløpt.
-      3. Nytt password grant hvis begge er utløpt.
+    Tokenet caches til det utløper — Maskinporten har ingen refresh_token.
     """
 
-    def __init__(self, username, password, well_known_url, session=None):
+    def __init__(self, username, client_id, jwk_json, token_url, resource, session=None):
         self._username = username
-        self._password = password
-        self._well_known_url = well_known_url
+        self._client_id = client_id
+        self._jwk_json = jwk_json
+        self._token_url = token_url
+        self._resource = resource
         self._session = session or requests.Session()
         self._lock = threading.Lock()
 
-        self._token_endpoint = None
         self._access_token = None
         self._access_expires_at = 0.0
-        self._refresh_token = None
-        self._refresh_expires_at = 0.0
 
     def __call__(self, request):
         request.headers["Authorization"] = f"Bearer {self._get_token()}"
-        # Hvis serveren likevel avviser tokenet, tving fornying og prøv én gang til.
+        request.headers["X-Matrikkel-Brukernavn"] = self._username
         request.register_hook("response", self._handle_401)
         return request
 
@@ -62,56 +56,51 @@ class MatrikkelTokenAuth(AuthBase):
             now = time.monotonic()
             if self._access_token and now < self._access_expires_at:
                 return self._access_token
-            if self._refresh_token and now < self._refresh_expires_at:
-                try:
-                    return self._request_token(
-                        {
-                            "grant_type": "refresh_token",
-                            "client_id": CLIENT_ID,
-                            "refresh_token": self._refresh_token,
-                        }
-                    )
-                except requests.RequestException as e:
-                    LOGGER.warning(
-                        "Kunne ikke forny token med refresh_token, "
-                        "faller tilbake til password grant: %s",
-                        e,
-                    )
-            return self._request_token(
-                {
-                    "grant_type": "password",
-                    "client_id": CLIENT_ID,
-                    "username": self._username,
-                    "password": self._password,
-                }
-            )
+            return self._fetch_token()
 
-    def _request_token(self, data):
-        """Utfører selve token-kallet. Kalles med _lock holdt."""
-        endpoint = self._get_token_endpoint()
-        response = self._session.post(endpoint, data=data, timeout=30)
+    def _fetch_token(self):
+        assertion = self._generate_jwt()
+        response = self._session.post(
+            self._token_url,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                "assertion": assertion,
+            },
+            timeout=30,
+        )
         response.raise_for_status()
         payload = response.json()
 
         now = time.monotonic()
         self._access_token = payload["access_token"]
         self._access_expires_at = (
-            now + payload.get("expires_in", 300) - EXPIRY_MARGIN_SECONDS
+            now + payload.get("expires_in", 120) - EXPIRY_MARGIN_SECONDS
         )
-        self._refresh_token = payload.get("refresh_token")
-        self._refresh_expires_at = (
-            now + payload.get("refresh_expires_in", 0) - EXPIRY_MARGIN_SECONDS
-        )
-        LOGGER.debug("Hentet nytt Matrikkel-token (grant_type=%s)", data["grant_type"])
+        LOGGER.debug("Hentet nytt Maskinporten-token")
         return self._access_token
 
-    def _get_token_endpoint(self):
-        """Henter token_endpoint dynamisk fra well-known-URL og cacher det."""
-        if self._token_endpoint is None:
-            response = self._session.get(self._well_known_url, timeout=30)
-            response.raise_for_status()
-            self._token_endpoint = response.json()["token_endpoint"]
-        return self._token_endpoint
+    def _generate_jwt(self):
+        jwk = json.loads(self._jwk_json)
+        private_key = jwt.algorithms.RSAAlgorithm.from_jwk(jwk)
+        now = int(time.time())
+        # aud skal være issuer-URL (base), ikke token-endepunktet
+        parsed = urlparse(self._token_url)
+        issuer = f"{parsed.scheme}://{parsed.netloc}/"
+        return jwt.encode(
+            {
+                "iss": self._client_id,
+                "sub": self._client_id,
+                "aud": issuer,
+                "scope": MASKINPORTEN_SCOPE,
+                "resource": self._resource,
+                "iat": now,
+                "exp": now + 180,
+                "jti": str(uuid.uuid4()),
+            },
+            private_key,
+            algorithm="RS256",
+            headers={"kid": jwk["kid"]},
+        )
 
     def _invalidate(self):
         with self._lock:
@@ -160,20 +149,21 @@ def get_matrikkel_client():
 
 def create_matrikkel_client(wsdl=None):
     """Opprett en zeep SOAP-klient mot Matrikkel-API."""
-    wsdl = wsdl or os.environ.get("MATRIKKEL_WSDL_URL", WSDL_URL)
-    well_known_url = os.environ.get("MATRIKKELEN_WELLKNOWN_URL", WELL_KNOWN_URL)
+    wsdl = wsdl or os.environ.get("MATRIKKELEN_WSDL_URL") or WSDL_URL
     username = os.environ.get("MATRIKKELEN_USERNAME")
-    password = os.environ.get("MATRIKKELEN_PASSWORD")
+    client_id = os.environ.get("MASKINPORTEN_CLIENT_ID")
+    jwk_json = os.environ.get("MASKINPORTEN_CLIENT_JWK")
+    token_url = os.environ.get("MASKINPORTEN_TOKEN_URL")
+    resource = os.environ.get("MASKINPORTEN_RESOURCE")
 
-    if not username or not password:
+    if not all([username, client_id, jwk_json, token_url, resource]):
         LOGGER.warning(
-            "MATRIKKELEN_USERNAME eller MATRIKKELEN_PASSWORD er ikke satt "
-            "— autentisering vil feile."
+            "En eller flere Maskinporten-variabler er ikke satt — autentisering vil feile."
         )
 
     settings = zeep.Settings(strict=False, xml_huge_tree=True)
     session = Session()
-    session.auth = MatrikkelTokenAuth(username, password, well_known_url)
+    session.auth = MatrikkelTokenAuth(username, client_id, jwk_json, token_url, resource)
     transport = Transport(session=session)
     return zeep.Client(wsdl=wsdl, settings=settings, transport=transport)
 
