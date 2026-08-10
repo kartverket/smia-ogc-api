@@ -154,6 +154,7 @@ def create_matrikkel_client(wsdl=None):
     issuer = os.environ.get("MASKINPORTEN_ISSUER")
     resource = os.environ.get("MASKINPORTEN_RESOURCE")
 
+    LOGGER.info("token_endpoint=%s issuer=%s resource=%s", token_endpoint, issuer, resource)
     if not all([username, client_id, jwk_json, token_endpoint, issuer, resource]):
         LOGGER.warning(
             "En eller flere Maskinporten-variabler er ikke satt — autentisering vil feile."
