@@ -4,10 +4,13 @@ on:
   push:
     branches: ["main"]
 
+concurrency:
+  group: build-push-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   DOCKER_REGISTRY: ghcr.io
   IMAGE_NAME: kartverket/smia-ogc-api
-  SMIA_APPS_VERSION_FILE: env/atkv3-dev/smia-tjenester-main/smia-ogc-api-version
 
 jobs:
   test:
@@ -22,6 +25,7 @@ jobs:
 
     outputs:
       version: ${{ steps.set_output.outputs.version }}
+      digest: ${{ steps.set_output.outputs.digest }}
       image_url: ${{ steps.set_output.outputs.image_url }}
 
     steps:
@@ -48,12 +52,15 @@ jobs:
           context: .
           file: deploy/Dockerfile
           push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag_version.outputs.new_tag }} , ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag_version.outputs.new_tag }}
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Set output with build values
         id: set_output
         run: |
-          echo "version=${{ steps.tag_version.outputs.new_tag }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+          echo "version=${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
+          echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
           echo "image_url=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
 
   pharos:
@@ -74,43 +81,14 @@ jobs:
 
   deploy-argo:
     permissions:
+      contents: read
       id-token: write
     needs: build
-    runs-on: ubuntu-latest
-    concurrency: smia-deploy
-    steps:
-      - name: Octo STS
-        uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
-        id: octo-sts
-        with:
-          scope: kartverket/smia-apps
-          identity: restapi
-
-      - name: Checkout the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: kartverket/smia-apps
-          ref: main
-          token: ${{ steps.octo-sts.outputs.token }}
-
-      - name: Update smia-apps and push
-        run: |
-          git config --global user.email "smia@kartverket.no"
-          git config --global user.name "SMIA CI"
-          git pull --ff-only origin main
-
-          IMAGEURL="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"
-
-          echo "### Deploying \"$IMAGEURL\"" >> $GITHUB_STEP_SUMMARY
-          echo 'Deploy to dev? true' >> $GITHUB_STEP_SUMMARY
-          
-          # Write the new version to the dev environment file
-          echo "\"$IMAGEURL\"" > "$SMIA_APPS_VERSION_FILE"
-          
-          git add "$SMIA_APPS_VERSION_FILE"
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Releaser smia-ogc-api:${{ needs.build.outputs.version }}"
-            git push origin HEAD:main
-          fi
+    uses: kartverket/smia-workflows/.github/workflows/deploy-app.yml@main
+    with:
+      application: smia-ogc-api
+      version: ${{ needs.build.outputs.version }}
+      digest: ${{ needs.build.outputs.digest }}
+      environment: dev
+      namespace: smia-tjenester-main
+      identity: restapi
