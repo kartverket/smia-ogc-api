@@ -35,8 +35,11 @@ flowchart TD
 3. **kommuneinfo-import** kjører kl. 02:00 hver natt. Leser silver GeoJSON fra GCS-bøtta og administrative inndelinger fra smia-silver GCS-bøtte. Importerer til et midlertidig schema og gjør en atomisk schema swap. NB! Både dev og prod kommuneinfo-import leser fra smia-silver i Databricks prod.
 4. **smia-ogc-api** leser direkte fra `inndelinger.bopliktomraade`-tabellen og eksponerer dataene som OGC API Features + en prosess for bopliktsjekk mot geometri.
 
+For unik feature-ID i OGC API må `lokalid` videreføres fra silver-produktet i importjobben. Siden importen gjør schema swap hver natt, må `lokalid` være med i både CREATE TABLE, mapping og INSERT i kommuneinfo-import, ellers forsvinner feltet ved neste kjøring.
+
 ## Viktig å vite
 
 - I nibas kan man registrere fremtidig gyldighetsdato på bopliktområder. Eksporteren henter både dagens og fremtidige data. Endringer trer i kraft automatisk neste natt når importen kjører.
 - OGC APIet bruker kun "dagens" datasett (`smia-silver/dagens/geojson/bopliktomraader/`), ikke fremtidige data.
 - CRS er EPSG:25833 (UTM sone 33) gjennom hele kjeden, ingen transformasjon underveis.
+- Før bytte av `id_field` i pygeoapi bør importen validere at `lokalid` ikke er tom og er unik etter avtalt regel.

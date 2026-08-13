@@ -32,7 +32,7 @@ INSERT INTO inndelinger.bopliktomraade (
     "harUsikkerAvgrensning",
     omrade
 ) VALUES (
-    '4601-001',
+    '00000000-0000-0000-0000-000000000001',
     '4601', true, true, true, false, true, NULL, false,
     ST_Multi(ST_GeomFromText(
         'POLYGON((68900 6627300, 69100 6627300, 69100 6627400, 68900 6627400, 68900 6627300))',
@@ -51,7 +51,7 @@ INSERT INTO inndelinger.bopliktomraade (
     "harUsikkerAvgrensning",
     omrade
 ) VALUES (
-    '4601-002',
+    '00000000-0000-0000-0000-000000000002',
     '4601', true, true, true, false, true, NULL, false,
     ST_Multi(ST_GeomFromText(
         'POLYGON((69400 6627300, 69600 6627300, 69600 6627400, 69400 6627400, 69400 6627300))',
@@ -72,7 +72,7 @@ INSERT INTO inndelinger.bopliktomraade (
     "harUsikkerAvgrensning",
     omrade
 ) VALUES (
-    '0301-001',
+    '00000000-0000-0000-0000-000000000003',
     '0301', false, true, true, true, false, NULL, false,
     ST_Multi(ST_GeomFromText(
         'POLYGON((260000 6650000, 261000 6650000, 261000 6651000, 260000 6651000, 260000 6650000))',
@@ -92,7 +92,7 @@ INSERT INTO inndelinger.bopliktomraade (
     "harUsikkerAvgrensning",
     omrade
 ) VALUES (
-    '1806-001',
+    '00000000-0000-0000-0000-000000000004',
     '1806', true, true, false, true, true, 'Avgrensning under revisjon.', true,
     ST_Multi(ST_GeomFromText(
         'POLYGON((599500 7596500, 600500 7596500, 600500 7597500, 599500 7597500, 599500 7596500))',
@@ -112,7 +112,7 @@ INSERT INTO inndelinger.bopliktomraade (
     "harUsikkerAvgrensning",
     omrade
 ) VALUES (
-    '4602-001',
+    '00000000-0000-0000-0000-000000000005',
     '4602', true, true, false, false, false, NULL, false,
     ST_Multi(ST_GeomFromText(
         'POLYGON((69100 6627300, 69300 6627300, 69300 6627400, 69100 6627400, 69100 6627300))',
