@@ -71,6 +71,26 @@ All konfigurasjon ligger i `pygeoapi-config.yml`. Her defineres:
 
 Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 
+## Matrikkel token-auth
+
+Vi bruker enkel token autentisering mot Matrikkelen, der token hentes med brukernavn og passord. Flyten er:
+
+- Hent token_endpoint fra well-known URL
+- Hent access token med brukernavn og passord
+- Send SOAP-kall med Authorization: Bearer access_token
+- Når access token utløper: prøv refresh token
+- Hvis refresh feiler/er utløpt: nytt password grant
+- Ved 401: invalider token og prøv samme kall én gang på nytt
+
+Miljøvariabler:
+
+- `MATRIKKELEN_USERNAME`
+- `MATRIKKELEN_PASSWORD`
+- `MATRIKKELEN_WELLKNOWN_URL`
+- `MATRIKKEL_WSDL_URL`
+
+Passord roteres årlig. Når passord byttes i Matrikkelen må secret oppdateres og pods restartes raskt, ellers vil bopliktsjekk-kall mot Matrikkel feile midlertidig.
+
 ## Bygg og deploy
 
 Produksjonsimagen bygges fra `deploy/Dockerfile` med et uv multi-steg-bygg, slik at **både lokalt og
