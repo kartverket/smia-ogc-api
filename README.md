@@ -75,17 +75,19 @@ Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 
 Vi bruker enkel token autentisering mot Matrikkelen, der token hentes med brukernavn og passord. Flyten er:
 
-- Første gang (eller når access og refresh er utløpt): hent token med password grant fra `token_endpoint`
-- SOAP-kall sendes med `Authorization: Bearer <access_token>`
-- `token_endpoint` hentes dynamisk fra `MATRIKKELEN_WELLKNOWN_URL`
-- Klienten prøver i denne rekkefølgen: gyldig access token -> refresh token -> nytt password grant
+- Hent token_endpoint fra well-known URL
+- Hent access token med brukernavn og passord
+- Send SOAP-kall med Authorization: Bearer access_token
+- Når access token utløper: prøv refresh token
+- Hvis refresh feiler/er utløpt: nytt password grant
+- Ved 401: invalider token og prøv samme kall én gang på nytt
 
 Miljøvariabler:
 
 - `MATRIKKELEN_USERNAME`
 - `MATRIKKELEN_PASSWORD`
 - `MATRIKKELEN_WELLKNOWN_URL`
-- `MATRIKKEL_WSDL_URL` (valgfri override)
+- `MATRIKKEL_WSDL_URL`
 
 Passord roteres årlig. Når passord byttes i Matrikkelen må secret oppdateres og pods restartes raskt, ellers vil bopliktsjekk-kall mot Matrikkel feile midlertidig.
 
