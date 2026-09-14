@@ -3,7 +3,7 @@
 FROM ghcr.io/astral-sh/uv:0.12.13@sha256:b485bd65cc2cf1c9a93b3554012c9c3778cf7b1b5fd3d3096ce9e1226c97e1e6 AS uv
 
 # ---------- Byggesteg ----------
-FROM dhi.io/python:3.12-dev@sha256:ddf2b7bd4625afc7e0a0931c45e7ca7001e8382df046fb9201cd69d198b35787 AS builder
+FROM dhi.io/python:3.12-dev@sha256:2e95ffbd7b232a5b44152958212af3860cd6fc060fefefb0b40aab1cd210a4df AS builder
 
 USER root
 
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/tmp/uv-cache \
     uv sync --locked --no-dev --no-install-project
 
 # ---------- Runtime-steg ----------
-FROM dhi.io/python:3.12@sha256:9ed68b49e125d26b0d0d17a8a6e3d6919456d440e067f3eeca9221592c76c0ca AS runtime
+FROM dhi.io/python:3.12@sha256:9c822cf6d915e2738fbffafc6b12ca35e28202f1df50869f3d3699ec14e285bd AS runtime
 
 WORKDIR /app
 
