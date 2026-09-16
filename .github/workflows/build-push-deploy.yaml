@@ -22,4 +22,4 @@ jobs:
         with:
           allow_severity_level: critical
           image_url: ghcr.io/kartverket/smia-ogc-api:latest
-          trivy_vex: "false"
+          trivy_vex: "true"
