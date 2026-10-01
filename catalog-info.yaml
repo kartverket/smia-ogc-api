@@ -12,6 +12,10 @@ spec:
   system: nibas
   providesApis:
     - smia-ogc-api
+  consumesApis:
+    - api:default/matrikkel-api
+  dependsOn:
+    - resource:default/inndelinger-database
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -29,3 +33,14 @@ spec:
     info:
         title: smia-ogc-api API
     paths:
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: inndelinger-database
+  tags:
+    - internal
+spec:
+  type: database
+  owner: smia
+  system: nibas
