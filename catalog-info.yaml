@@ -3,6 +3,13 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: smia-ogc-api
+  description: Offentlig OGC API for administrative inndelinger og bopliktsjekk.
+  annotations:
+    github.com/project-slug: kartverket/smia-ogc-api
+  links:
+    - title: Produksjon URL
+      url: https://inndelinger.api.kartverket.no/v1
+      icon: web
   tags:
     - public
 spec:
