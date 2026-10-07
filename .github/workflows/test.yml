@@ -16,7 +16,5 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --locked
-      - name: Run unit tests
-        run: uv run pytest -m "not integration" --cov=processes --cov=deploy --cov-report=
-      - name: Run integration tests
+      - name: Run tests
         run: uv run pytest --cov=processes --cov=deploy --cov-report=term-missing
