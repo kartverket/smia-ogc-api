@@ -158,9 +158,9 @@ def get_matrikkel_client():
     return _matrikkel_client
 
 
-def create_matrikkel_client(wsdl=None):
+def create_matrikkel_client():
     """Opprett en zeep SOAP-klient mot Matrikkel-API."""
-    wsdl = wsdl or os.environ.get("MATRIKKEL_WSDL_URL", WSDL_URL)
+    wsdl = os.environ.get("MATRIKKEL_WSDL_URL", WSDL_URL)
     well_known_url = os.environ.get("MATRIKKELEN_WELLKNOWN_URL", WELL_KNOWN_URL)
     username = os.environ.get("MATRIKKELEN_USERNAME")
     password = os.environ.get("MATRIKKELEN_PASSWORD")
