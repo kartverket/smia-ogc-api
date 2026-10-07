@@ -212,7 +212,7 @@ Alle 11 kanter kobler seg perfekt til en lukket ring.
 ```python
 for item in items:
     if "posisjon" in item:   → points[id] = [x, y]
-    if "kurve"    in item:   → edges[id]  = {start, end, hjtype, kurvepunkter, bue}
+    if "kurve"    in item:   → edges[id]  = {start, end, kurvepunkter, bue}
     if "flate"    in item:   → teiger.append(item)
 ```
 
@@ -255,21 +255,13 @@ Visuelt for eksempeleiendommen:
 
 ```python
 if len(polygons) == 1:
-    return {"type": "Polygon", "coordinates": polygons}, hjelpelinjetyper, har_bue
-return (
-    {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]},
-    hjelpelinjetyper,
-    har_bue,
-)
+    return {"type": "Polygon", "coordinates": polygons}, har_bue
+return {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]}, har_bue
 ```
 
-Funksjonen returnerer også:
-
-- `hjelpelinjetyper` — set med hjelpelinjetypeId-verdier fra kantene
-- `har_bue` — `True` hvis noen kanter har buegeometri (logges som advarsel)
-
-`hent_teiggeometri()` wrapper legger til shapely-validering og returnerer:
-`(geom, hjelpelinjetyper, geom_validering, har_bue)`
+`har_bue` angir om noen kanter har buegeometri. `hent_teiggeometri()` logger
+buefunn og resultatet av shapely-valideringen ved ugyldig geometri, og returnerer
+bare `geom`.
 
 > `interior: null` her — støtte for hull i polygoner er tilgjengelig i strukturen men ikke implementert (ikke nødvendig for bopliktsjekk).
 
@@ -345,17 +337,11 @@ Hele systemet bruker **EPSG:25833 (UTM Zone 33N)**:
 
 ---
 
-## 8. Hjelpelinjetyper
-
-Matrikkel-kanter kan ha en `hjelpelinjetypeId` — en kode som sier noe om grensens rettslige status (f.eks. påvist, ikke påvist, midlertidig). Disse samles opp internt i geometrihentingen for analyse/logging, men returneres ikke i API-responsen fra bopliktsjekk-endepunktet i dagens implementasjon.
-
----
-
-## 9. Feilhåndtering
+## 8. Feilhåndtering
 
 | Situasjon                    | Håndtering                                                      |
 | ---------------------------- | --------------------------------------------------------------- |
 | Matrikkelenheten finnes ikke | SOAP fault → `ProcessorExecuteError` med norsk feilmelding      |
 | Nettverksfeil mot Matrikkel  | Exception fanget → feilmelding                                  |
-| Ingen geometri i svaret      | `_extract_geometry` returnerer `None` → feilmelding             |
+| Ingen geometri i svaret      | `hent_teiggeometri` returnerer `None` → feilmelding              |
 | DB-feil                      | Exception fanget, logget, re-raised som `ProcessorExecuteError` |

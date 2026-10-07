@@ -50,4 +50,4 @@ Prod-databasen har `max_connections = 300`.
 - Kan både gjøre kall mot database og andre api-er som Matrikkel API.
 - Vi styrer hva som blir returnert i svaret
 - F.eks hvilke felter som skal være med i svaret, og hvordan resultatet skal struktureres
-- I dagens implementasjon returneres bopliktresultat og materielle vilkår. Interne metadata fra geometrihenting (for eksempel hjelpelinjetyper) returneres ikke i API-responsen.
+- I dagens implementasjon returneres bopliktresultat og materielle vilkår. Buefunn og ugyldig geometri logges ved geometrihenting.
