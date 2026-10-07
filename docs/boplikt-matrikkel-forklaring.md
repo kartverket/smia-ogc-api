@@ -284,18 +284,23 @@ Ingen geometri involvert — bare et enkelt tabelloppslag.
 ### sjekk_boplikt() — Full romlig sjekk
 
 ```sql
-WITH input AS (
+WITH raa_input AS (
     SELECT ST_SetSRID(ST_GeomFromGeoJSON(%s), 25833) AS geom
-    --      ↑ Parse GeoJSON    ↑ Sett SRID eksplisitt til 25833
+),
+input AS (
+    SELECT geom, ST_MakeValid(geom) AS geom_gyldig FROM raa_input
 )
 SELECT
-    kommunenummer, "gjelderKunDelAvKommunen", ...,
-    ST_Within(input.geom, omrade) AS is_within
-    --  ↑ Er geometrien HELT innenfor bopliktområdet?
+    "gjelderKunDelAvKommunen", ...,
+    ST_Within(input.geom_gyldig, omrade) AS is_within,
+    ST_Area(input.geom_gyldig) AS teig_m2,
+    ST_Area(
+        ST_Intersection(input.geom_gyldig, ST_Union(omrade) OVER ())
+    ) AS overlap_m2
 FROM inndelinger.bopliktomraade, input
-WHERE ST_Intersects(input.geom, omrade)
---    ↑ Finn alle bopliktområder som overlapper (inkl. delvis)
-AND kommunenummer = %s
+WHERE omrade && input.geom_gyldig
+  AND ST_Intersects(input.geom_gyldig, omrade)
+  AND kommunenummer = %s -- ved filtrering på kommunenummer
 ```
 
 ### Statustolkning
@@ -343,5 +348,5 @@ Hele systemet bruker **EPSG:25833 (UTM Zone 33N)**:
 | ---------------------------- | --------------------------------------------------------------- |
 | Matrikkelenheten finnes ikke | SOAP fault → `ProcessorExecuteError` med norsk feilmelding      |
 | Nettverksfeil mot Matrikkel  | Exception fanget → feilmelding                                  |
-| Ingen geometri i svaret      | `hent_teiggeometri` returnerer `None` → feilmelding              |
+| Ingen geometri i svaret      | `hent_teiggeometri` returnerer `None` → feilmelding             |
 | DB-feil                      | Exception fanget, logget, re-raised som `ProcessorExecuteError` |

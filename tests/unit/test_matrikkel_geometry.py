@@ -19,7 +19,6 @@ def test_hent_teiggeometri_returnerer_geometri_og_logger_bue(monkeypatch, caplog
                 "buepunktX": 1,
                 "buepunktY": 0,
             },
-            "hjelpelinjetypeId": {"value": 7},
         },
         {
             "id": {"value": 11},
@@ -59,7 +58,9 @@ def test_hent_teiggeometri_returnerer_geometri_og_logger_bue(monkeypatch, caplog
     assert "Ugyldig geometri" not in caplog.text
 
 
-def test_hent_teiggeometri_uten_geometri_logger_valideringsfeil(monkeypatch, caplog):
+def test_hent_teiggeometri_uten_geometri_returnerer_none_og_logger_advarsel(
+    monkeypatch, caplog
+):
     monkeypatch.setattr(
         matrikkel_geometry,
         "hent_matrikkelenhet_med_teiger",
