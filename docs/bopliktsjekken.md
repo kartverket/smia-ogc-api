@@ -6,7 +6,7 @@
 flowchart TD
     A[Input: kommunenr + gnr/bnr/fnr/snr] --> B{Har kommunen boplikt?}
     B -- Nei --> C[Return: iBopliktomrade=NEI]
-    B -- Ja --> D{delvis_boplikt?}
+    B -- Ja --> D{gjelderKunDelAvKommunen?}
     D -- false: hele kommunen --> E[Return: iBopliktomrade=JA med materielle vilkår]
     D -- true: deler av kommunen --> F[Hent geometri fra Matrikkel]
     F --> G[Romlig sjekk mot bopliktområder]
@@ -17,7 +17,7 @@ flowchart TD
 
 1. **Sjekk kommune** — enkel SQL på `kommunenummer` uten geometri
 2. **Ingen treff** — kommunen har ikke boplikt → `nei`, ferdig
-3. **Hel boplikt** — alle treff har `delvis_boplikt=false` → `ja`, ferdig
+3. **Hel boplikt** — alle treff har `gjelderKunDelAvKommunen=false` → `ja`, ferdig
 4. **Delvis boplikt** — hent teiggeometri fra Matrikkel, kjør `ST_Intersects`/`ST_Within` mot bopliktområder
 
 ## Databasetilkoblinger
@@ -41,7 +41,7 @@ Prod-databasen har `max_connections = 300`.
 - Henter data fra `inndelinger.bopliktomraade`-tabellen og eksponerer via OGC API Features
 - Viser felter slike som det er i lagret i databasen.
 - Ingen transformasjon av geometri, CRS er EPSG:25833 (UTM sone 33) gjennom hele kjeden.
-- Kan gjøre custom spørringer som å filtrere på kommunenummer, delvis_boplikt, eller andre attributter i tabellen.
+- Kan gjøre custom spørringer som å filtrere på kommunenummer, `gjelderKunDelAvKommunen`, eller andre attributter i tabellen.
 - Kan gjøre romlige spørringer som å finne alle bopliktområder som overlapper en gitt geometri.
 
 ## Bopliktsjekk: OGC-process

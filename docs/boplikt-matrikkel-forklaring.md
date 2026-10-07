@@ -75,7 +75,7 @@ Step 1: sjekk_kommune_boplikt(kommunenummer)
         │
         ├── NEI ──→ { iBopliktomrade: "NEI" }  ← FERDIG (ingen geometrisjekk)
         │
-        └── JA ──→ Har alle bopliktområder full boplikt (delvis_boplikt = false)?
+        └── JA ──→ Har alle bopliktområder full boplikt (gjelderKunDelAvKommunen = false)?
                    │
                    ├── JA (alle fulle) ──→ { iBopliktomrade: "JA", ...vilkår }  ← FERDIG (ingen geometri)
                    │
@@ -282,7 +282,7 @@ Funksjonen returnerer også:
 ### sjekk_kommune_boplikt() — Rask kommunesjekk
 
 ```sql
-SELECT kommunenummer, fylkesnummer, delvis_boplikt, ...
+SELECT kommunenummer, fylkesnummer, "gjelderKunDelAvKommunen", ...
 FROM inndelinger.bopliktomraade
 WHERE kommunenummer = %s
 ```
@@ -297,7 +297,7 @@ WITH input AS (
     --      ↑ Parse GeoJSON    ↑ Sett SRID eksplisitt til 25833
 )
 SELECT
-    kommunenummer, delvis_boplikt, ...,
+    kommunenummer, "gjelderKunDelAvKommunen", ...,
     ST_Within(input.geom, omrade) AS is_within
     --  ↑ Er geometrien HELT innenfor bopliktområdet?
 FROM inndelinger.bopliktomraade, input

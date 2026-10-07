@@ -112,8 +112,8 @@ def sjekk_kommune_boplikt(kommunenummer):
     Returns:
         list[dict]: Treff fra bopliktomraade-tabellen. Mulige utfall:
             - Tom liste: kommunen har ingen boplikt.
-            - Én dict med delvis_boplikt=False: full boplikt for hele kommunen.
-            - Én dict med delvis_boplikt=True: delvis boplikt, krever geometrisjekk.
+            - Én dict med gjelderKunDelAvKommunen=False: full boplikt for hele kommunen.
+            - Én dict med gjelderKunDelAvKommunen=True: delvis boplikt, krever geometrisjekk.
             En kommune vil aldri ha både True og False — det garanteres av datagrunnlaget.
 
     Raises:
