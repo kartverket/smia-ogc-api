@@ -51,3 +51,7 @@ Prod-databasen har `max_connections = 300`.
 - Vi styrer hva som blir returnert i svaret
 - F.eks hvilke felter som skal være med i svaret, og hvordan resultatet skal struktureres
 - I dagens implementasjon returneres bopliktresultat og materielle vilkår. Buefunn og ugyldig geometri logges ved geometrihenting.
+
+`POST /v1/processes/bopliktsjekk/execution` tar et JSON-objekt med `inputs` som eneste
+toppnivåfelt. Andre felt, som `subscriber`, avvises med HTTP 400. Svaret inneholder bare feltene
+som er definert i prosessens `BOPLIKTSJEKK_OUTPUT`; nye databasekolonner eksponeres ikke automatisk.

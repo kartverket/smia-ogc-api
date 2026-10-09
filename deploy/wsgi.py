@@ -51,6 +51,13 @@ def check_bopliktsjekk_inputs():
         return _bad_request(
             "Request body må være gyldig JSON med Content-Type: application/json."
         )
+    if not isinstance(body, dict):
+        return _bad_request("Request body må være et JSON-objekt.")
+
+    unknown_fields = set(body) - {"inputs"}
+    if unknown_fields:
+        logger.warning("Ukjente toppnivåfelt for %s: %s", request.path, unknown_fields)
+        return _bad_request(f"Ukjente felt i request body: {sorted(unknown_fields)}.")
 
     inputs = body.get("inputs")
     if not isinstance(inputs, dict):

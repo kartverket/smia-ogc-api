@@ -8,7 +8,8 @@ from pygeoapi.process.base import ProcessorExecuteError
 
 from processes import bopliktsjekk
 from processes.bopliktsjekk import BopliktSjekkProcessor
-from processes.utils.boplikt_db import _COLUMNS
+from processes.utils.boplikt_db import _COLUMNS, bygg_boplikt_resultat
+from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
 
 KOMMUNENUMMER = "4203"
 GARDSNUMMER = 306
@@ -92,6 +93,17 @@ def test_fake_rad_har_samme_kolonner_som_koden():
     """Sjekker om testdataene har samme kolonner som produksjonskoden forventer."""
 
     assert set(kommune_rad(False)) == set(_COLUMNS)
+
+
+def test_resultat_inneholder_bare_publiserte_felt():
+    resultat = bygg_boplikt_resultat(
+        "JA", {**kommune_rad(False), "interntFelt": "ikke publiser"}
+    )
+
+    publiserte_felt = BOPLIKTSJEKK_OUTPUT["resultat"]["schema"]["properties"]
+    assert set(resultat) == set(publiserte_felt)
+    assert resultat["iBopliktomrade"] == "JA"
+    assert resultat["gjelderForBruktSomHelarsbolig"] is True
 
 
 @pytest.mark.parametrize(
