@@ -12,11 +12,8 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.33"
           enable-cache: true
       - name: Install dependencies
         run: uv sync --locked
-      - name: Run unit tests
-        run: uv run pytest -m "not integration" --cov=processes --cov=deploy --cov-report=
-      - name: Run integration tests
+      - name: Run tests
         run: uv run pytest --cov=processes --cov=deploy --cov-report=term-missing

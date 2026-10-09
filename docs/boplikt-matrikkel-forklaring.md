@@ -75,7 +75,7 @@ Step 1: sjekk_kommune_boplikt(kommunenummer)
         │
         ├── NEI ──→ { iBopliktomrade: "NEI" }  ← FERDIG (ingen geometrisjekk)
         │
-        └── JA ──→ Har alle bopliktområder full boplikt (delvis_boplikt = false)?
+        └── JA ──→ Har alle bopliktområder full boplikt (gjelderKunDelAvKommunen = false)?
                    │
                    ├── JA (alle fulle) ──→ { iBopliktomrade: "JA", ...vilkår }  ← FERDIG (ingen geometri)
                    │
@@ -212,7 +212,7 @@ Alle 11 kanter kobler seg perfekt til en lukket ring.
 ```python
 for item in items:
     if "posisjon" in item:   → points[id] = [x, y]
-    if "kurve"    in item:   → edges[id]  = {start, end, hjtype, kurvepunkter, bue}
+    if "kurve"    in item:   → edges[id]  = {start, end, kurvepunkter, bue}
     if "flate"    in item:   → teiger.append(item)
 ```
 
@@ -255,21 +255,13 @@ Visuelt for eksempeleiendommen:
 
 ```python
 if len(polygons) == 1:
-    return {"type": "Polygon", "coordinates": polygons}, hjelpelinjetyper, har_bue
-return (
-    {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]},
-    hjelpelinjetyper,
-    har_bue,
-)
+    return {"type": "Polygon", "coordinates": polygons}, har_bue
+return {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]}, har_bue
 ```
 
-Funksjonen returnerer også:
-
-- `hjelpelinjetyper` — set med hjelpelinjetypeId-verdier fra kantene
-- `har_bue` — `True` hvis noen kanter har buegeometri (logges som advarsel)
-
-`hent_teiggeometri()` wrapper legger til shapely-validering og returnerer:
-`(geom, hjelpelinjetyper, geom_validering, har_bue)`
+`har_bue` angir om noen kanter har buegeometri. `hent_teiggeometri()` logger
+buefunn og resultatet av shapely-valideringen ved ugyldig geometri, og returnerer
+bare `geom`.
 
 > `interior: null` her — støtte for hull i polygoner er tilgjengelig i strukturen men ikke implementert (ikke nødvendig for bopliktsjekk).
 
@@ -282,7 +274,7 @@ Funksjonen returnerer også:
 ### sjekk_kommune_boplikt() — Rask kommunesjekk
 
 ```sql
-SELECT kommunenummer, fylkesnummer, delvis_boplikt, ...
+SELECT kommunenummer, fylkesnummer, "gjelderKunDelAvKommunen", ...
 FROM inndelinger.bopliktomraade
 WHERE kommunenummer = %s
 ```
@@ -292,18 +284,23 @@ Ingen geometri involvert — bare et enkelt tabelloppslag.
 ### sjekk_boplikt() — Full romlig sjekk
 
 ```sql
-WITH input AS (
+WITH raa_input AS (
     SELECT ST_SetSRID(ST_GeomFromGeoJSON(%s), 25833) AS geom
-    --      ↑ Parse GeoJSON    ↑ Sett SRID eksplisitt til 25833
+),
+input AS (
+    SELECT geom, ST_MakeValid(geom) AS geom_gyldig FROM raa_input
 )
 SELECT
-    kommunenummer, delvis_boplikt, ...,
-    ST_Within(input.geom, omrade) AS is_within
-    --  ↑ Er geometrien HELT innenfor bopliktområdet?
+    "gjelderKunDelAvKommunen", ...,
+    ST_Within(input.geom_gyldig, omrade) AS is_within,
+    ST_Area(input.geom_gyldig) AS teig_m2,
+    ST_Area(
+        ST_Intersection(input.geom_gyldig, ST_Union(omrade) OVER ())
+    ) AS overlap_m2
 FROM inndelinger.bopliktomraade, input
-WHERE ST_Intersects(input.geom, omrade)
---    ↑ Finn alle bopliktområder som overlapper (inkl. delvis)
-AND kommunenummer = %s
+WHERE omrade && input.geom_gyldig
+  AND ST_Intersects(input.geom_gyldig, omrade)
+  AND kommunenummer = %s -- ved filtrering på kommunenummer
 ```
 
 ### Statustolkning
@@ -345,17 +342,11 @@ Hele systemet bruker **EPSG:25833 (UTM Zone 33N)**:
 
 ---
 
-## 8. Hjelpelinjetyper
-
-Matrikkel-kanter kan ha en `hjelpelinjetypeId` — en kode som sier noe om grensens rettslige status (f.eks. påvist, ikke påvist, midlertidig). Disse samles opp internt i geometrihentingen for analyse/logging, men returneres ikke i API-responsen fra bopliktsjekk-endepunktet i dagens implementasjon.
-
----
-
-## 9. Feilhåndtering
+## 8. Feilhåndtering
 
 | Situasjon                    | Håndtering                                                      |
 | ---------------------------- | --------------------------------------------------------------- |
 | Matrikkelenheten finnes ikke | SOAP fault → `ProcessorExecuteError` med norsk feilmelding      |
 | Nettverksfeil mot Matrikkel  | Exception fanget → feilmelding                                  |
-| Ingen geometri i svaret      | `_extract_geometry` returnerer `None` → feilmelding             |
+| Ingen geometri i svaret      | `hent_teiggeometri` returnerer `None` → feilmelding             |
 | DB-feil                      | Exception fanget, logget, re-raised som `ProcessorExecuteError` |

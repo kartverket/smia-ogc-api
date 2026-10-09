@@ -13,7 +13,7 @@ flowchart TD
     silver["GCS bøtte: smia-silver"]
     import["kommuneinfo-import hver natt"]
     kommuneinfo-db[("Kommuneinfo database")]
-    inndelinger-db[("inndelinger database)]
+    inndelinger-db[("inndelinger database")]
     ogc["smia-ogc-api"]
     kommuneinfo["kommuneinfo-api"]
 

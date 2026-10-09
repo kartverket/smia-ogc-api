@@ -83,7 +83,7 @@ def matrikkel(monkeypatch):
         hent_teiggeometri=stub(
             monkeypatch,
             "hent_teiggeometri",
-            (TEIG, [], {"is_valid": True, "reason": None}, False),
+            TEIG,
         ),
     )
 
@@ -199,12 +199,7 @@ def test_delvis_boplikt_filtrerer_paa_kommunenummer(prosessor, db, matrikkel):
 
 def test_manglende_teiggeometri_gir_feil(prosessor, db, matrikkel):
     db.sjekk_kommune_boplikt.return_value = [kommune_rad(True)]
-    matrikkel.hent_teiggeometri.return_value = (
-        None,
-        [],
-        {"is_valid": False, "reason": None},
-        False,
-    )
+    matrikkel.hent_teiggeometri.return_value = None
 
     with pytest.raises(ProcessorExecuteError, match="Fant ingen teiggeometri"):
         prosessor.execute(INPUT)

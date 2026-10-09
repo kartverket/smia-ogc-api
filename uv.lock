@@ -48,7 +48,7 @@ wheels = [
 ]
 
 [[package]]
-name = "boplikt"
+name = "smia-ogc-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
