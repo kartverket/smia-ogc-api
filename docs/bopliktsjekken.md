@@ -55,3 +55,6 @@ Prod-databasen har `max_connections = 300`.
 Ukjente toppnivåfelt i request body til `POST /v1/processes/bopliktsjekk/execution`
 avvises med HTTP 400. `inputs`, `outputs`, `response` og `subscriber` er definerte
 OGC-felt og avvises ikke som ukjente felt.
+
+Prosessvaret inneholder bare feltene definert i `BOPLIKTSJEKK_OUTPUT`; nye
+databasekolonner publiseres ikke automatisk.

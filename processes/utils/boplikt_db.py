@@ -37,9 +37,11 @@ _COLUMNS = [
 
 def bygg_boplikt_resultat(boplikt, row_dict):
     """Bygg flat response-dict med boplikt-status og materielle vilkår."""
+    from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
+
+    published = BOPLIKTSJEKK_OUTPUT["resultat"]["schema"]["properties"]
     result = {"iBopliktomrade": boplikt}
-    result.update(row_dict)
-    result.pop(Column.GJELDER_KUN_DEL_AV_KOMMUNEN.value, None)
+    result.update({key: row_dict[key] for key in published if key in row_dict})
     return result
 
 
