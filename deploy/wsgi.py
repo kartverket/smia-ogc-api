@@ -40,7 +40,7 @@ def _bad_request(description: str):
 
 @app.before_request
 def check_bopliktsjekk_inputs():
-    spec = _PROCESS_INPUT_SPECS.get(request.path)
+    spec = _PROCESS_INPUT_SPECS.get(request.path.rstrip("/"))
     if spec is None or request.method != "POST":
         return None
 
@@ -51,6 +51,8 @@ def check_bopliktsjekk_inputs():
         return _bad_request(
             "Request body må være gyldig JSON med Content-Type: application/json."
         )
+    if not isinstance(body, dict):
+        return _bad_request("Request body må være et JSON-objekt.")
 
     inputs = body.get("inputs")
     if not isinstance(inputs, dict):
