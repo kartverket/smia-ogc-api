@@ -58,3 +58,6 @@ OGC-felt og avvises ikke som ukjente felt.
 
 Prosessvaret inneholder bare feltene definert i `BOPLIKTSJEKK_OUTPUT`; nye
 databasekolonner publiseres ikke automatisk.
+
+Uventede feil logges med traceback, men detaljer om interne feil sendes ikke til
+kalleren. pygeoapi returnerer HTTP 400 med en generell feilmelding ved prosessfeil.
