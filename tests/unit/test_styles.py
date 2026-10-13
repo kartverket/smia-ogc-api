@@ -58,6 +58,40 @@ def test_returns_mapbox_style(styles_client):
     )
 
 
+def test_default_style_uses_bopliktomraade_cartography(styles_client):
+    response = styles_client.get(
+        "/v1/collections/bopliktomraade/styles/bopliktomraade-default?f=mbs",
+        headers={"X-API-Key": "testkey"},
+    )
+
+    layers = response.json["layers"]
+    assert [layer["id"] for layer in layers] == [
+        "bopliktomraade-fill",
+        "bopliktomraade-inner-band",
+        "bopliktomraade-halo",
+        "bopliktomraade-outline",
+    ]
+    assert layers[0]["paint"] == {
+        "fill-color": "#1D4E89",
+        "fill-opacity": 0.12,
+    }
+    assert layers[1]["paint"] == {
+        "line-color": "#1D4E89",
+        "line-opacity": 0.5,
+        "line-width": 8,
+        "line-offset": 4,
+    }
+    assert layers[2]["paint"] == {
+        "line-color": "#FFFFFF",
+        "line-width": 5,
+    }
+    assert layers[3]["paint"] == {
+        "line-color": "#1D4E89",
+        "line-width": 2,
+    }
+    assert all("minzoom" not in layer and "maxzoom" not in layer for layer in layers)
+
+
 def test_rejects_unsupported_style_format(styles_client):
     response = styles_client.get(
         "/v1/collections/bopliktomraade/styles/bopliktomraade-default?f=sld",

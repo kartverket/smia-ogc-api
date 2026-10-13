@@ -13,9 +13,28 @@
       "type": "fill",
       "source": "bopliktomraade",
       "paint": {
-        "fill-color": "#f2c14e",
-        "fill-opacity": 0.35,
-        "fill-outline-color": "#7a4f01"
+        "fill-color": "#1D4E89",
+        "fill-opacity": 0.12
+      }
+    },
+    {
+      "id": "bopliktomraade-inner-band",
+      "type": "line",
+      "source": "bopliktomraade",
+      "paint": {
+        "line-color": "#1D4E89",
+        "line-opacity": 0.5,
+        "line-width": 8,
+        "line-offset": 4
+      }
+    },
+    {
+      "id": "bopliktomraade-halo",
+      "type": "line",
+      "source": "bopliktomraade",
+      "paint": {
+        "line-color": "#FFFFFF",
+        "line-width": 5
       }
     },
     {
@@ -23,7 +42,7 @@
       "type": "line",
       "source": "bopliktomraade",
       "paint": {
-        "line-color": "#7a4f01",
+        "line-color": "#1D4E89",
         "line-width": 2
       }
     }
