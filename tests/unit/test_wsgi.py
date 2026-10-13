@@ -4,6 +4,7 @@ import importlib
 from pathlib import Path
 
 import pytest
+from prometheus_client import generate_latest
 
 from processes import bopliktsjekk
 from processes.bopliktsjekk import BopliktSjekkProcessor
@@ -13,7 +14,7 @@ EXECUTION = "/v1/processes/bopliktsjekk/execution"
 
 
 @pytest.fixture(scope="module")
-def client(tmp_path_factory):
+def wsgi(tmp_path_factory):
     with pytest.MonkeyPatch.context() as mp:
         tmp_path = tmp_path_factory.mktemp("wsgi")
         openapi = tmp_path / "openapi.yml"
@@ -28,7 +29,12 @@ def client(tmp_path_factory):
 
         wsgi = importlib.import_module("deploy.wsgi")
         wsgi.app.config["TESTING"] = True
-        yield wsgi.app.test_client()
+        yield wsgi
+
+
+@pytest.fixture
+def client(wsgi):
+    return wsgi.app.test_client()
 
 
 @pytest.fixture
@@ -58,6 +64,18 @@ def test_sikkerhetsheadere(client):
     assert response.headers["Strict-Transport-Security"].startswith("max-age=")
     assert response.headers["Permissions-Policy"]
     assert response.headers["Content-Security-Policy"]
+
+
+def test_metrikker_grupperes_paa_rute(wsgi, client, api_headers):
+    client.get("/v1/collections/tilfeldig-a/items/id-1", headers=api_headers)
+    client.get("/v1/collections/tilfeldig-b/items/id-2", headers=api_headers)
+    client.get("/finnes/ikke/tilfeldig-c")
+
+    metrics = generate_latest(wsgi.metrics.registry).decode()
+
+    assert 'path="/v1/collections/<path:collection_id>/items/<path:item_id>"' in metrics
+    assert 'path="ukjent"' in metrics
+    assert "tilfeldig" not in metrics
 
 
 def test_gyldig_request_kjoerer_prosessen(client, api_headers, monkeypatch):
