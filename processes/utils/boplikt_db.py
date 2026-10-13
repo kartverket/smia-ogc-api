@@ -47,6 +47,7 @@ def bygg_boplikt_resultat(boplikt, row_dict):
 
 
 _STATEMENT_TIMEOUT = os.environ.get("DB_STATEMENT_TIMEOUT", "15s")
+_CONNECT_TIMEOUT = os.environ.get("DB_CONNECT_TIMEOUT", "5")
 
 _db_pool = None
 
@@ -63,6 +64,7 @@ def _get_pool():
                 dbname=os.environ.get("DB_NAME", "postgres"),
                 user=os.environ.get("INNDELINGER_DB_USER", "postgres"),
                 password=os.environ.get("INNDELINGER_DB_PASSWORD", "postgres"),
+                connect_timeout=_CONNECT_TIMEOUT,
             )
         except Exception as e:  # noqa: BLE001
             LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
