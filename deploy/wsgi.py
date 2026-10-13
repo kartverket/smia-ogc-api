@@ -14,7 +14,12 @@ API_KEY = os.environ.get("OGC_API_KEY")
 
 OPEN_PATHS = {"/v1/", "/v1", "/v1/openapi", "/v1/conformance", "/health"}
 
-metrics = GunicornPrometheusMetrics(app)
+
+def path(req):
+    return str(req.url_rule) if req.url_rule else "ukjent"
+
+
+metrics = GunicornPrometheusMetrics(app, group_by=path)
 
 
 def _input_spec(metadata: dict) -> tuple[frozenset, dict]:
