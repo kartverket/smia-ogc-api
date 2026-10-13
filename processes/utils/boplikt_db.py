@@ -6,6 +6,7 @@ import os
 from enum import StrEnum
 
 from psycopg2 import InterfaceError, OperationalError
+from psycopg2.errors import QueryCanceled
 from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
 
@@ -84,6 +85,11 @@ def _execute_query(sql, params):
                 )
                 cur.execute(sql, params)
                 return cur.fetchall()
+        except QueryCanceled:
+            LOGGER.error("Databasespørringen ble avbrutt")
+            raise ProcessorExecuteError(
+                user_msg="En feil oppstod, prøv igjen senere."
+            ) from None
         except (OperationalError, InterfaceError) as e:
             LOGGER.warning(
                 "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
