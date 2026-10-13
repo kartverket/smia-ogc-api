@@ -74,8 +74,9 @@ def _get_pool():
 def _execute_query(sql, params):
     db_pool = _get_pool()
     for attempt in range(2):
-        conn = db_pool.getconn()
+        conn = None
         try:
+            conn = db_pool.getconn()
             with conn, conn.cursor() as cur:
                 cur.execute(
                     "SET LOCAL statement_timeout = %s",
@@ -93,7 +94,8 @@ def _execute_query(sql, params):
                 user_msg="En feil oppstod, prøv igjen senere."
             ) from None
         finally:
-            db_pool.putconn(conn, close=bool(conn.closed))
+            if conn is not None:
+                db_pool.putconn(conn, close=bool(conn.closed))
 
     raise ProcessorExecuteError(
         user_msg="En feil oppstod, prøv igjen senere."
