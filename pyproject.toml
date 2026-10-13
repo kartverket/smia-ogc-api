@@ -1,5 +1,5 @@
 [project]
-name = "boplikt"
+name = "smia-ogc-api"
 version = "0.1.0"
 description = "OGC API for administrative inndelinger og bopliktsjekk, bygd med pygeoapi"
 readme = "README.md"

@@ -99,7 +99,7 @@ def _expand_style_urls(style: dict) -> dict:
 
 @app.before_request
 def check_bopliktsjekk_inputs():
-    spec = _PROCESS_INPUT_SPECS.get(request.path)
+    spec = _PROCESS_INPUT_SPECS.get(request.path.rstrip("/"))
     if spec is None or request.method != "POST":
         return None
 
@@ -110,6 +110,13 @@ def check_bopliktsjekk_inputs():
         return _bad_request(
             "Request body må være gyldig JSON med Content-Type: application/json."
         )
+    if not isinstance(body, dict):
+        return _bad_request("Request body må være et JSON-objekt.")
+
+    unknown_fields = set(body) - {"inputs", "outputs", "response", "subscriber"}
+    if unknown_fields:
+        logger.warning("Ukjente toppnivåfelt for %s: %s", request.path, unknown_fields)
+        return _bad_request(f"Ukjente felt i request body: {sorted(unknown_fields)}.")
 
     inputs = body.get("inputs")
     if not isinstance(inputs, dict):

@@ -1,8 +1,8 @@
 # Administrative inndelinger OGC API
 
 OGC API for Administrative inndelinger bygd med [pygeoapi](https://pygeoapi.io/). Tjenesten deler
-data fra Kartverket som OGC API Features og tilbyr en OGC API Process for bopliktsjekk som sjekker om en
-eiendom ligger innenfor et bopliktområde.
+data fra Kartverket som OGC API Features og tilbyr en OGC API Process for bopliktsjekk som sjekker
+om en eiendom ligger innenfor et bopliktområde.
 
 ## Oppsett
 
@@ -48,7 +48,7 @@ Dette starter to tjenester:
 
 Prometheus-metrikker er tilgjengelig på <http://localhost:8181>.
 
-Databasen og API-et er forhåndskonfigurert med brukeren `boplikt` og API-nøkkelen settes til
+Databasen og API-et er forhåndskonfigurert med brukeren `inndelinger` og API-nøkkelen settes til
 `testkey` lokalt. Disse verdiene ligger i `compose.yaml` og trenger ikke å endres for lokal
 utvikling.
 
@@ -71,6 +71,9 @@ All konfigurasjon ligger i `pygeoapi-config.yml`. Her defineres:
 
 Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 
+`DB_CONNECT_TIMEOUT` styrer tidsgrensen for å opprette en databasetilkobling (sekunder per adresse,
+standard 5).
+
 ### Stiler
 
 Samlingen `bopliktomraade` publiserer en standardstil etter OGC API - Styles:
@@ -83,7 +86,8 @@ GeoJSON fra samlingens `/items`-endepunkt og er derfor begrenset av `server.limi
 
 ## Matrikkel token-auth
 
-Vi bruker enkel token autentisering mot Matrikkelen, der token hentes med brukernavn og passord. Flyten er:
+Vi bruker enkel token autentisering mot Matrikkelen, der token hentes med brukernavn og passord.
+Flyten er:
 
 - Hent token_endpoint fra well-known URL
 - Hent access token med brukernavn og passord
@@ -99,7 +103,8 @@ Miljøvariabler:
 - `MATRIKKELEN_WELLKNOWN_URL`
 - `MATRIKKEL_WSDL_URL`
 
-Passord roteres årlig. Når passord byttes i Matrikkelen må secret oppdateres og pods restartes raskt, ellers vil bopliktsjekk-kall mot Matrikkel feile midlertidig.
+Passord roteres årlig. Når passord byttes i Matrikkelen må secret oppdateres og pods restartes
+raskt, ellers vil bopliktsjekk-kall mot Matrikkel feile midlertidig.
 
 ## Bygg og deploy
 
@@ -126,9 +131,11 @@ uv run pytest                                                         # alle tes
 uv run pytest --cov=processes --cov=deploy --cov-report=term-missing  # med coverage
 ```
 
-Integrasjonstestene starter en `postgis`-container med [testcontainers](https://testcontainers-python.readthedocs.io/).
+Integrasjonstestene starter en `postgis`-container med
+[testcontainers](https://testcontainers-python.readthedocs.io/).
 
-Testene kjøres i CI på hver pull request og ved merge til `main`, se `.github/workflows/test.yml`. Coverage rapporteres i CI-loggen, men ingen terskel feiler bygget.
+Testene kjøres i CI på hver pull request og ved merge til `main`, se `.github/workflows/test.yml`.
+Coverage rapporteres i CI-loggen, men ingen terskel feiler bygget.
 
 ## Linting og formatering
 

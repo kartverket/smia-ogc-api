@@ -8,7 +8,8 @@ from pygeoapi.process.base import ProcessorExecuteError
 
 from processes import bopliktsjekk
 from processes.bopliktsjekk import BopliktSjekkProcessor
-from processes.utils.boplikt_db import _COLUMNS
+from processes.utils.boplikt_db import _COLUMNS, bygg_boplikt_resultat
+from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
 
 KOMMUNENUMMER = "4203"
 GARDSNUMMER = 306
@@ -83,7 +84,7 @@ def matrikkel(monkeypatch):
         hent_teiggeometri=stub(
             monkeypatch,
             "hent_teiggeometri",
-            (TEIG, [], {"is_valid": True, "reason": None}, False),
+            TEIG,
         ),
     )
 
@@ -92,6 +93,17 @@ def test_fake_rad_har_samme_kolonner_som_koden():
     """Sjekker om testdataene har samme kolonner som produksjonskoden forventer."""
 
     assert set(kommune_rad(False)) == set(_COLUMNS)
+
+
+def test_resultat_inneholder_bare_publiserte_felt():
+    resultat = bygg_boplikt_resultat(
+        "JA", {**kommune_rad(False), "interntFelt": "ikke publiser"}
+    )
+
+    publiserte_felt = BOPLIKTSJEKK_OUTPUT["resultat"]["schema"]["properties"]
+    assert set(resultat) == set(publiserte_felt)
+    assert resultat["iBopliktomrade"] == "JA"
+    assert resultat["gjelderForBruktSomHelarsbolig"] is True
 
 
 @pytest.mark.parametrize(
@@ -199,12 +211,7 @@ def test_delvis_boplikt_filtrerer_paa_kommunenummer(prosessor, db, matrikkel):
 
 def test_manglende_teiggeometri_gir_feil(prosessor, db, matrikkel):
     db.sjekk_kommune_boplikt.return_value = [kommune_rad(True)]
-    matrikkel.hent_teiggeometri.return_value = (
-        None,
-        [],
-        {"is_valid": False, "reason": None},
-        False,
-    )
+    matrikkel.hent_teiggeometri.return_value = None
 
     with pytest.raises(ProcessorExecuteError, match="Fant ingen teiggeometri"):
         prosessor.execute(INPUT)

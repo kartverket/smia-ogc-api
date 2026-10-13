@@ -1,6 +1,8 @@
 """Integrasjonstester for boplikt_db mot ekte PostGIS."""
 
+import psycopg2
 import pytest
+from pygeoapi.process.base import ProcessorExecuteError
 
 from processes.utils import boplikt_db
 from processes.utils.boplikt_db import (
@@ -62,6 +64,21 @@ KRYSSER_TO_OMRADER = {
 }
 
 
+@pytest.fixture
+def db_tilkobling(postgis):
+    """Egen tilkobling til testdatabasen, uavhengig av applikasjonens pool."""
+    conn = psycopg2.connect(
+        host=postgis.get_container_host_ip(),
+        port=postgis.get_exposed_port(5432),
+        dbname=postgis.dbname,
+        user=postgis.username,
+        password=postgis.password,
+    )
+    conn.autocommit = True
+    yield conn
+    conn.close()
+
+
 def test_kolonner_matcher_koden():
     rader = boplikt_db._execute_query(
         "SELECT column_name FROM information_schema.columns "
@@ -111,3 +128,17 @@ def test_geometri_krysser_to_omrader_gir_delvis():
 def test_filtrering_paa_kommunenummer_utelukker_naboomrade():
     assert sjekk_boplikt(HELT_INNENFOR, kommunenummer="4602")["iBopliktomrade"] == "NEI"
     assert sjekk_boplikt(HELT_INNENFOR, kommunenummer="4601")["iBopliktomrade"] == "JA"
+
+
+def test_statement_timeout_kjoeres_ikke_paa_nytt(db_tilkobling, monkeypatch):
+    with db_tilkobling.cursor() as cur:
+        cur.execute("DROP SEQUENCE IF EXISTS kjoeringer")
+        cur.execute("CREATE SEQUENCE kjoeringer")
+    monkeypatch.setattr(boplikt_db, "_STATEMENT_TIMEOUT", "100ms")
+
+    with pytest.raises(ProcessorExecuteError):
+        boplikt_db._execute_query("SELECT nextval('kjoeringer'), pg_sleep(1)", ())
+
+    with db_tilkobling.cursor() as cur:
+        cur.execute("SELECT nextval('kjoeringer')")
+        assert cur.fetchone()[0] == 2

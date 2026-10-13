@@ -20,10 +20,8 @@ def hent_teiggeometri(client, kommunenummer, gardsnummer, bruksnummer):
         bruksnummer (int): Bruksnummer.
 
     Returns:
-        tuple: (geom, hjelpelinjetyper, validation, har_bue) der geom er GeoJSON-dict
-            (Polygon eller MultiPolygon i EPSG:25833), hjelpelinjetyper er en
-            sortert liste med hjelpelinjetypeId-verdier, validation er en
-            dict med is_valid og reason fra shapely, og har_bue er bool.
+        dict | None: GeoJSON-geometri (Polygon eller MultiPolygon i EPSG:25833),
+            eller None hvis ingen brukbar geometri finnes.
 
     Raises:
         ProcessorExecuteError: Ved SOAP-feil eller nettverksfeil mot Matrikkel.
@@ -34,7 +32,7 @@ def hent_teiggeometri(client, kommunenummer, gardsnummer, bruksnummer):
         gardsnummer,
         bruksnummer,
     )
-    geom, hjelpelinjetyper, har_bue = _extract_geometry(result_dict)
+    geom, har_bue = _extract_geometry(result_dict)
 
     if har_bue:
         LOGGER.warning(
@@ -57,7 +55,7 @@ def hent_teiggeometri(client, kommunenummer, gardsnummer, bruksnummer):
             0,
             validation["reason"],
         )
-    return geom, sorted(hjelpelinjetyper), validation, har_bue
+    return geom
 
 
 def _validate_geometry(geom):
@@ -138,7 +136,6 @@ def _parse_matrikkel_objects(items):
         if isinstance(kurve, dict):
             startpunkt = (kurve.get("startpunktId") or {}).get("value")
             endepunkt = (kurve.get("endpunktId") or {}).get("value")
-            hjelpelinjetype = (item.get("hjelpelinjetypeId") or {}).get("value")
             har_bue = kurve.get("buepunktX") is not None
             raw_kurvepunkter = kurve.get("kurvepunkter")
             kurvepunkter = []
@@ -154,7 +151,6 @@ def _parse_matrikkel_objects(items):
                 grenser[object_id["value"]] = {
                     "startpunkt": startpunkt,
                     "endepunkt": endepunkt,
-                    "hjelpelinjetype": hjelpelinjetype,
                     "bue": har_bue,
                     "kurvepunkter": kurvepunkter,
                 }
@@ -166,7 +162,7 @@ def _parse_matrikkel_objects(items):
 
 
 def _build_teig_polygons(teiger, grenser, punkter):
-    """Bygg polygoner og samle hjelpelinjetyper fra alle teiger.
+    """Bygg polygoner fra alle teiger.
 
     Args:
         teiger (list[dict]): Teig-objekter med flate.exterior.curveDirections.
@@ -174,10 +170,8 @@ def _build_teig_polygons(teiger, grenser, punkter):
         punkter (dict): Oppslagstabell for punkter.
 
     Returns:
-        tuple: (polygons, hjelpelinjetyper) der polygons er liste av
-            koordinatlister og hjelpelinjetyper er et set med hjelpelinjetypeId-verdier.
+        list: Polygoner som koordinatlister.
     """
-    hjelpelinjetyper = set()
     polygons = []
 
     for teig in teiger:
@@ -188,13 +182,7 @@ def _build_teig_polygons(teiger, grenser, punkter):
         if len(polygon) >= 4:
             polygons.append(polygon)
 
-        for retning in ext_dirs:
-            grenselinjeId = (retning.get("grenselinjeId") or {}).get("value")
-            grense = grenser.get(grenselinjeId)
-            if grense and grense["hjelpelinjetype"] is not None:
-                hjelpelinjetyper.add(grense["hjelpelinjetype"])
-
-    return polygons, hjelpelinjetyper
+    return polygons
 
 
 def _extract_geometry(result):
@@ -204,30 +192,24 @@ def _extract_geometry(result):
         result (dict): Deserialisert SOAP-respons fra findMatrikkelenhetMedTeiger.
 
     Returns:
-        tuple: (geom, hjelpelinjetyper, har_bue) der geom er en GeoJSON-dict
-            (Polygon ved en teig, MultiPolygon ved flere), hjelpelinjetyper
-            er et set med hjelpelinjetypeId-verdier fra kantene, og har_bue
-            er en bool som indikerer om noen av kantene har buer.
-            Returnerer (None, set(), False) om ingen brukbar geometri finnes.
+        tuple: (geom, har_bue) der geom er en GeoJSON-dict
+            (Polygon ved en teig, MultiPolygon ved flere) eller None om ingen
+            brukbar geometri finnes, og har_bue angir om noen kanter har buer.
     """
     items = result.get("bubbleObjects", {}).get("item", [])
     if not items:
-        return None, set(), False
+        return None, False
 
     punkter, grenser, teiger = _parse_matrikkel_objects(items)
 
     har_bue = any(g["bue"] for g in grenser.values())
     if not teiger or not punkter or not grenser:
-        return None, set(), har_bue
+        return None, har_bue
 
-    polygons, hjelpelinjetyper = _build_teig_polygons(teiger, grenser, punkter)
+    polygons = _build_teig_polygons(teiger, grenser, punkter)
 
     if not polygons:
-        return None, hjelpelinjetyper, har_bue
+        return None, har_bue
     if len(polygons) == 1:
-        return {"type": "Polygon", "coordinates": polygons}, hjelpelinjetyper, har_bue
-    return (
-        {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]},
-        hjelpelinjetyper,
-        har_bue,
-    )
+        return {"type": "Polygon", "coordinates": polygons}, har_bue
+    return {"type": "MultiPolygon", "coordinates": [[p] for p in polygons]}, har_bue
