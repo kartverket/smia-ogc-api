@@ -74,6 +74,16 @@ Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 `DB_CONNECT_TIMEOUT` styrer tidsgrensen for å opprette en databasetilkobling (sekunder per adresse,
 standard 5).
 
+### Stiler
+
+Samlingen `bopliktomraade` publiserer en standardstil etter OGC API - Styles:
+
+- `GET /v1/collections/bopliktomraade/styles` lister tilgjengelige stiler og angir standardstil.
+- `GET /v1/collections/bopliktomraade/styles/bopliktomraade-default?f=mbs` returnerer stilen som Mapbox Style JSON.
+
+Endepunktene krever API-nøkkel på samme måte som samlingens øvrige endepunkter. Stilen bruker
+GeoJSON fra samlingens `/items`-endepunkt og er derfor begrenset av `server.limits.max_items`.
+
 ## Matrikkel token-auth
 
 Vi bruker enkel token autentisering mot Matrikkelen, der token hentes med brukernavn og passord.

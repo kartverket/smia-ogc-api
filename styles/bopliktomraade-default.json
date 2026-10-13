@@ -1,0 +1,50 @@
+{
+  "version": 8,
+  "name": "Bopliktområde - standard",
+  "sources": {
+    "bopliktomraade": {
+      "type": "geojson",
+      "data": "${PYGEOAPI_URL}/v1/collections/bopliktomraade/items?f=json&limit=50"
+    }
+  },
+  "layers": [
+    {
+      "id": "bopliktomraade-fill",
+      "type": "fill",
+      "source": "bopliktomraade",
+      "paint": {
+        "fill-color": "#1D4E89",
+        "fill-opacity": 0.12
+      }
+    },
+    {
+      "id": "bopliktomraade-inner-band",
+      "type": "line",
+      "source": "bopliktomraade",
+      "paint": {
+        "line-color": "#1D4E89",
+        "line-opacity": 0.5,
+        "line-width": 8,
+        "line-offset": 4
+      }
+    },
+    {
+      "id": "bopliktomraade-halo",
+      "type": "line",
+      "source": "bopliktomraade",
+      "paint": {
+        "line-color": "#FFFFFF",
+        "line-width": 5
+      }
+    },
+    {
+      "id": "bopliktomraade-outline",
+      "type": "line",
+      "source": "bopliktomraade",
+      "paint": {
+        "line-color": "#1D4E89",
+        "line-width": 2
+      }
+    }
+  ]
+}
