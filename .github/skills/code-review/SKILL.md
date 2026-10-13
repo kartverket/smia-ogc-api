@@ -31,7 +31,9 @@ breaking.
 
 - Error paths: timeouts, Matrikkelen down, database down, empty or malformed input. Does it fail
   loudly with the right status code?
-- A bug fix needs a regression test that fails without the fix.
+- Look for regression coverage that would fail without the fix. Flag missing coverage when it
+  leaves a concrete, important failure case untested; don't require a separate test for every
+  small change.
 - Skip formatting and anything Ruff catches.
 
 Few comments. Each one has file, line and a concrete failing case, marked blocking or non-blocking.

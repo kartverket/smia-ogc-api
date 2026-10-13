@@ -6,6 +6,7 @@ import os
 from enum import StrEnum
 
 from psycopg2 import InterfaceError, OperationalError
+from psycopg2.errors import QueryCanceled
 from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
 
@@ -46,6 +47,7 @@ def bygg_boplikt_resultat(boplikt, row_dict):
 
 
 _STATEMENT_TIMEOUT = os.environ.get("DB_STATEMENT_TIMEOUT", "15s")
+_CONNECT_TIMEOUT = os.environ.get("DB_CONNECT_TIMEOUT", "5")
 
 _db_pool = None
 
@@ -62,6 +64,7 @@ def _get_pool():
                 dbname=os.environ.get("DB_NAME", "postgres"),
                 user=os.environ.get("INNDELINGER_DB_USER", "postgres"),
                 password=os.environ.get("INNDELINGER_DB_PASSWORD", "postgres"),
+                connect_timeout=_CONNECT_TIMEOUT,
             )
         except Exception as e:  # noqa: BLE001
             LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
@@ -74,8 +77,9 @@ def _get_pool():
 def _execute_query(sql, params):
     db_pool = _get_pool()
     for attempt in range(2):
-        conn = db_pool.getconn()
+        conn = None
         try:
+            conn = db_pool.getconn()
             with conn, conn.cursor() as cur:
                 cur.execute(
                     "SET LOCAL statement_timeout = %s",
@@ -83,6 +87,11 @@ def _execute_query(sql, params):
                 )
                 cur.execute(sql, params)
                 return cur.fetchall()
+        except QueryCanceled:
+            LOGGER.error("Databasespørringen ble avbrutt")
+            raise ProcessorExecuteError(
+                user_msg="En feil oppstod, prøv igjen senere."
+            ) from None
         except (OperationalError, InterfaceError) as e:
             LOGGER.warning(
                 "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
@@ -93,8 +102,10 @@ def _execute_query(sql, params):
                 user_msg="En feil oppstod, prøv igjen senere."
             ) from None
         finally:
-            db_pool.putconn(conn, close=bool(conn.closed))
+            if conn is not None:
+                db_pool.putconn(conn, close=bool(conn.closed))
 
+    LOGGER.error("Databasen er utilgjengelig etter 2 forsøk")
     raise ProcessorExecuteError(
         user_msg="En feil oppstod, prøv igjen senere."
     ) from None

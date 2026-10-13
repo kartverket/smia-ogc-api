@@ -71,6 +71,9 @@ All konfigurasjon ligger i `pygeoapi-config.yml`. Her defineres:
 
 Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 
+`DB_CONNECT_TIMEOUT` styrer tidsgrensen for å opprette en databasetilkobling (sekunder per adresse,
+standard 5).
+
 ## Matrikkel token-auth
 
 Vi bruker enkel token autentisering mot Matrikkelen, der token hentes med brukernavn og passord.
