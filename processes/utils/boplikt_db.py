@@ -103,6 +103,7 @@ def _execute_query(sql, params):
             if conn is not None:
                 db_pool.putconn(conn, close=bool(conn.closed))
 
+    LOGGER.error("Databasen er utilgjengelig etter 2 forsøk")
     raise ProcessorExecuteError(
         user_msg="En feil oppstod, prøv igjen senere."
     ) from None
