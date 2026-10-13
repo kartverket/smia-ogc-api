@@ -116,6 +116,18 @@ class BopliktSjekkProcessor(BaseProcessor):
         super().__init__(processor_def, PROCESS_METADATA)
 
     def execute(self, data, outputs=None):
+        try:
+            return self._sjekk_boplikt(data)
+        except ProcessorExecuteError:
+            raise
+        except Exception:
+            # pygeoapi sender teksten fra andre unntak rett til kalleren.
+            LOGGER.exception("Uventet feil i bopliktsjekk")
+            raise ProcessorExecuteError(
+                user_msg="En feil oppstod, prøv igjen senere."
+            ) from None
+
+    def _sjekk_boplikt(self, data):
         kommunenummer = data.get("kommunenummer")
         gardsnummer = data.get("gardsnummer")
         bruksnummer = data.get("bruksnummer")
