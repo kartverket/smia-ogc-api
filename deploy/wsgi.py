@@ -75,8 +75,7 @@ def _style_links(collection_id: str, style_id: str) -> list[dict]:
         {
             "rel": "stylesheet",
             "href": (
-                f"{PYGEOAPI_URL}/v1/collections/{collection_id}/styles/"
-                f"{style_id}?f=mbs"
+                f"{PYGEOAPI_URL}/v1/collections/{collection_id}/styles/{style_id}?f=mbs"
             ),
             "type": STYLE_MEDIA_TYPE,
         }
@@ -86,9 +85,7 @@ def _style_links(collection_id: str, style_id: str) -> list[dict]:
 def _expand_style_urls(style: dict) -> dict:
     for source in style.get("sources", {}).values():
         if isinstance(source.get("data"), str):
-            source["data"] = source["data"].replace(
-                "${PYGEOAPI_URL}", PYGEOAPI_URL
-            )
+            source["data"] = source["data"].replace("${PYGEOAPI_URL}", PYGEOAPI_URL)
         if "tiles" in source:
             source["tiles"] = [
                 f"{PYGEOAPI_URL}{url}" if url.startswith("/") else url
@@ -208,9 +205,7 @@ def get_collection_styles(collection_id: str):
             {
                 "id": style["id"],
                 "title": l10n.translate(style.get("title") or style["id"], locale),
-                "description": l10n.translate(
-                    style.get("description") or "", locale
-                ),
+                "description": l10n.translate(style.get("description") or "", locale),
                 "links": _style_links(collection_id, style["id"]),
             }
             for style in styles
@@ -237,9 +232,7 @@ def get_collection_style(collection_id: str, style_id: str):
         return _bad_request(f"Unsupported style format: {requested_format}")
 
     try:
-        style_document = json.loads(
-            Path(style["path"]).read_text(encoding="utf-8")
-        )
+        style_document = json.loads(Path(style["path"]).read_text(encoding="utf-8"))
     except FileNotFoundError:
         logger.exception("Style file not found: %s", style["path"])
         return jsonify(

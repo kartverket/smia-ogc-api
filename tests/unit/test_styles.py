@@ -106,6 +106,7 @@ def test_advertises_styles_conformance(styles_client):
     response = styles_client.get("/v1/conformance")
 
     assert response.status_code == 200
-    assert "http://www.opengis.net/spec/ogcapi-styles-1/1.0/conf/core" in (
-        response.json["conformsTo"]
+    assert (
+        "http://www.opengis.net/spec/ogcapi-styles-1/1.0/conf/core"
+        in (response.json["conformsTo"])
     )
