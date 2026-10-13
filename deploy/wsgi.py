@@ -16,6 +16,7 @@ from processes.bopliktsjekk import PROCESS_METADATA as _BOPLIKTSJEKK_METADATA
 logger = logging.getLogger(__name__)
 
 API_KEY = os.environ.get("OGC_API_KEY")
+REQUIRE_API_KEY = os.environ.get("OGC_API_REQUIRE_KEY", "true").lower() != "false"
 PYGEOAPI_URL = os.environ.get("PYGEOAPI_URL", "http://localhost:5000").rstrip("/")
 STYLE_MEDIA_TYPE = "application/vnd.mapbox.style+json"
 STYLES_CONFORMANCE_CLASSES = {
@@ -136,7 +137,7 @@ def check_bopliktsjekk_inputs():
 
 @app.before_request
 def check_api_key():
-    if request.path in OPEN_PATHS:
+    if not REQUIRE_API_KEY or request.path in OPEN_PATHS:
         return
     if not API_KEY:
         abort(503)
