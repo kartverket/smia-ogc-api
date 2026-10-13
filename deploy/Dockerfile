@@ -30,6 +30,7 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY processes/ /app/processes/
 COPY deploy/ /app/deploy/
+COPY styles/ /app/styles/
 COPY pygeoapi-config.yml /app/pygeoapi-config.yml
 
 ENV PATH="/app/.venv/bin:$PATH" \

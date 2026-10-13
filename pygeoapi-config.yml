@@ -55,6 +55,11 @@ resources:
     description: Bopliktområder
     keywords:
       - boplikt
+    links:
+      - type: application/json
+        rel: http://www.opengis.net/def/rel/ogc/1.0/styles
+        title: Styles
+        href: ${PYGEOAPI_URL:-http://localhost:5000}/v1/collections/bopliktomraade/styles
     extents:
       spatial:
         bbox: [-10.0, 57.0, 35.0, 72.0]
@@ -77,6 +82,16 @@ resources:
         crs:
           - http://www.opengis.net/def/crs/EPSG/0/25833
         storage_crs: http://www.opengis.net/def/crs/EPSG/0/25833
+    styles:
+      - id: bopliktomraade-default
+        title:
+          nb-NO: Bopliktområde - standard
+          en-US: Bopliktområde - default
+        description:
+          nb-NO: Standardstil for bopliktområder.
+          en-US: Default style for residential-obligation areas.
+        default: true
+        path: styles/bopliktomraade-default.json
 
   bopliktsjekk:
     type: process
