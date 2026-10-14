@@ -152,6 +152,18 @@ imports ved lagring. Bruker du en annen editor, se
 
 ## Monitorering
 
+Prometheus eksponerer `matrikkel_request_duration_seconds` for SOAP-kall per `outcome`
+(`ok`, `not_found`, `fault`, `error`), `matrikkel_token_requests_total` per `grant`
+(`password`, `refresh_token`) og `outcome` (`ok`, `error`), og
+`bopliktsjekk_result_total` per fullført resultat (`JA`, `NEI`, `DELVIS`).
+Klientoppsett som feiler telles som `error` i kallmetrikken; en matrikkelenhet
+som ikke finnes telles som `not_found`, ikke som feil hos Matrikkelen.
+Alle seriene finnes fra oppstart med verdien 0.
+
+JSON-loggene har feltene `level` og `logger`. Access-loggen bruker `ERROR`
+for HTTP 5xx og `INFO` ellers. En 5xx kan også gi en egen ERROR-linje fra
+applikasjonen; filtrer på `logger` når du teller feillinjer.
+
 Det finnes et dashboard i Grafana for dette APIet. Gå til
 [Smia: Matrikkeltjenester](https://monitoring.kartverket.cloud/d/ad6ed173-cb04-48ee-add2-6b3d5538fdec/smia3a-matrikkeltjenester?orgId=1&from=now-1h&to=now&timezone=browser&var-prometheus=P3C08CCCD0A204B5D&var-tjeneste=smia-ogc-api&var-loki=PC49BB3D5AB252A94&var-loglevel=INFO&var-loglevel=WARN&var-loglevel=ERROR&var-namespace=smia-tjenester-main)
 i Grafana, og velg smia-ogc-api under "tjeneste". Husk å justere om du skal se prod eller dev
