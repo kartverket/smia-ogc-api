@@ -19,6 +19,7 @@ Returnerer:
 import logging
 import re
 
+from prometheus_client import Counter
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 from processes.utils.boplikt_db import (
@@ -35,6 +36,15 @@ from processes.utils.matrikkel_client import (
 from processes.utils.matrikkel_geometry import hent_teiggeometri
 
 LOGGER = logging.getLogger(__name__)
+
+BOPLIKTSJEKK_RESULTAT = Counter(
+    "bopliktsjekk_result_total",
+    "Antall fullførte bopliktsjekker per resultat (JA, NEI, DELVIS)",
+    ["result"],
+)
+# Oppretter seriene med verdi 0 ved oppstart, så rate() ser også den første sjekken.
+for _resultat in ("JA", "NEI", "DELVIS"):
+    BOPLIKTSJEKK_RESULTAT.labels(_resultat)
 
 
 def _valider_matrikkelnummer(kommunenummer, gardsnummer, bruksnummer):
@@ -117,7 +127,7 @@ class BopliktSjekkProcessor(BaseProcessor):
 
     def execute(self, data, outputs=None):
         try:
-            return self._sjekk_boplikt(data)
+            mimetype, resultat = self._sjekk_boplikt(data)
         except ProcessorExecuteError:
             raise
         except Exception:
@@ -126,6 +136,8 @@ class BopliktSjekkProcessor(BaseProcessor):
             raise ProcessorExecuteError(
                 user_msg="En feil oppstod, prøv igjen senere."
             ) from None
+        BOPLIKTSJEKK_RESULTAT.labels(resultat["iBopliktomrade"]).inc()
+        return mimetype, resultat
 
     def _sjekk_boplikt(self, data):
         kommunenummer = data.get("kommunenummer")

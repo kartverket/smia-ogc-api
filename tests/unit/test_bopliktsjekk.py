@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, create_autospec
 
 import pytest
+from prometheus_client import REGISTRY
 from pygeoapi.process.base import ProcessorExecuteError
 
 from processes import bopliktsjekk
@@ -217,3 +218,40 @@ def test_manglende_teiggeometri_gir_feil(prosessor, db, matrikkel):
         prosessor.execute(INPUT)
 
     db.sjekk_boplikt.assert_not_called()
+
+
+def antall_resultat(resultat):
+    return REGISTRY.get_sample_value("bopliktsjekk_result_total", {"result": resultat})
+
+
+@pytest.mark.parametrize(
+    ("kommune_rader", "forventet"),
+    [
+        ([], "NEI"),
+        ([kommune_rad(False)], "JA"),
+        ([kommune_rad(True)], "DELVIS"),
+    ],
+)
+def test_resultatet_telles(prosessor, db, matrikkel, kommune_rader, forventet):
+    db.sjekk_kommune_boplikt.return_value = kommune_rader
+    foer = antall_resultat(forventet)
+
+    prosessor.execute(INPUT)
+
+    assert antall_resultat(forventet) == foer + 1
+
+
+def test_feilet_sjekk_telles_ikke(prosessor, db, matrikkel):
+    db.sjekk_kommune_boplikt.return_value = [kommune_rad(True)]
+    matrikkel.hent_teiggeometri.return_value = None
+    foer = [antall_resultat(r) for r in ("JA", "NEI", "DELVIS")]
+
+    with pytest.raises(ProcessorExecuteError):
+        prosessor.execute(INPUT)
+
+    assert [antall_resultat(r) for r in ("JA", "NEI", "DELVIS")] == foer
+
+
+@pytest.mark.parametrize("resultat", ["JA", "NEI", "DELVIS"])
+def test_resultat_serien_finnes_foer_foerste_sjekk(resultat):
+    assert antall_resultat(resultat) is not None
