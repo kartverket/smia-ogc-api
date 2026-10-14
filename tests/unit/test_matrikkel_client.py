@@ -153,7 +153,12 @@ def test_tokenhenting_som_avbrytes_av_gunicorn_telles_som_error():
     ("svar", "feil"),
     [
         ({}, KeyError),
-        ({"access_token": "abc", "expires_in": None}, TypeError),
+        ({"access_token": "abc", "expires_in": None}, ValueError),
+        ({"access_token": "abc", "expires_in": 0}, ValueError),
+        ({"access_token": "abc", "expires_in": -1}, ValueError),
+        ({"access_token": "abc", "expires_in": float("nan")}, ValueError),
+        ({"access_token": "abc", "expires_in": float("inf")}, ValueError),
+        ({"access_token": "abc", "expires_in": True}, ValueError),
         ({"access_token": "abc", "refresh_expires_in": None}, TypeError),
     ],
 )

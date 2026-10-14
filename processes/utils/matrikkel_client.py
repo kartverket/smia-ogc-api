@@ -2,6 +2,7 @@
 
 import json
 import logging
+import math
 import os
 import threading
 import time
@@ -123,9 +124,15 @@ class MatrikkelTokenAuth(AuthBase):
             # etterlater et halvt oppdatert token.
             now = time.monotonic()
             access_token = payload["access_token"]
-            access_expires_at = (
-                now + payload.get("expires_in", 300) - EXPIRY_MARGIN_SECONDS
-            )
+            expires_in = payload.get("expires_in", 300)
+            if (
+                isinstance(expires_in, bool)
+                or not isinstance(expires_in, (int, float))
+                or not math.isfinite(expires_in)
+                or expires_in <= 0
+            ):
+                raise ValueError("Ugyldig expires_in i Matrikkel-tokenrespons")
+            access_expires_at = now + expires_in - EXPIRY_MARGIN_SECONDS
             refresh_token = payload.get("refresh_token")
             refresh_expires_at = (
                 now + payload.get("refresh_expires_in", 0) - EXPIRY_MARGIN_SECONDS
