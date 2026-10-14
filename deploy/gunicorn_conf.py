@@ -42,6 +42,9 @@ class JsonRequestFormatter(json_log_formatter.JSONFormatter):
             url += f"?{record.args['q']}"
 
         return {
+            # Uten level og logger havner linjene utenfor filtre på dem i Grafana.
+            "level": "ERROR" if int(record.args["s"]) >= 500 else "INFO",
+            "logger": record.name,
             "remote_ip": record.args["h"],
             "method": record.args["m"],
             "path": url,
@@ -65,6 +68,7 @@ class JsonErrorFormatter(json_log_formatter.JSONFormatter):
             message, extra, record
         )
         payload["level"] = record.levelname
+        payload["logger"] = record.name
         return payload
 
 
