@@ -5,25 +5,30 @@ description = "OGC API for administrative inndelinger og bopliktsjekk, bygd med 
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "flask-cors>=6.0.5",
-    "geoalchemy2>=0.18.1",
-    "gevent>=26.8.0",
-    "gunicorn>=25.0.3",
-    "json-log-formatter>=1.2.1",
-    "prometheus-client>=0.26.0",
-    "prometheus-flask-exporter>=0.23.2",
-    "psycopg2-binary>=2.9.11",
-    "pygeoapi>=0.24.0",
-    "shapely>=2.0",
-    "zeep>=4.3.3",
+  "flask-cors>=6.0.5",
+  "geoalchemy2>=0.18.1",
+  "gevent>=26.8.0",
+  "gunicorn>=25.0.3",
+  "json-log-formatter>=1.2.1",
+  "opentelemetry-exporter-otlp-proto-http>=1.45.1",
+  "opentelemetry-instrumentation-flask>=0.66b1",
+  "opentelemetry-instrumentation-psycopg2>=0.66b1",
+  "opentelemetry-instrumentation-requests>=0.66b1",
+  "opentelemetry-sdk>=1.45.1",
+  "prometheus-client>=0.26.0",
+  "prometheus-flask-exporter>=0.23.2",
+  "psycopg2-binary>=2.9.11",
+  "pygeoapi>=0.24.0",
+  "shapely>=2.0",
+  "zeep>=4.3.3",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
-    "ruff>=0.16.3",
-    "testcontainers[postgres]>=4.15.0",
+  "pytest>=9.1.1",
+  "pytest-cov>=7.1.0",
+  "ruff>=0.16.3",
+  "testcontainers[postgres]>=4.15.0",
 ]
 
 [tool.pytest.ini_options]
@@ -36,11 +41,5 @@ markers = ["integration"]
 line-length = 88
 
 [tool.ruff.lint]
-extend-select = [
-    "I",
-    "UP",
-    "B",
-]
-ignore = [
-    "B905",
-]
+extend-select = ["I", "UP", "B"]
+ignore = ["B905"]

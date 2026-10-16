@@ -4,6 +4,7 @@ import os
 import sys
 
 import json_log_formatter
+from opentelemetry import trace
 from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 
 bind = f"{os.environ.get('CONTAINER_HOST', '0.0.0.0')}:{os.environ.get('CONTAINER_PORT', '5000')}"
@@ -69,6 +70,9 @@ class JsonErrorFormatter(json_log_formatter.JSONFormatter):
         )
         payload["level"] = record.levelname
         payload["logger"] = record.name
+        span_context = trace.get_current_span().get_span_context()
+        if span_context.is_valid:
+            payload["trace_id"] = format(span_context.trace_id, "032x")
         return payload
 
 
