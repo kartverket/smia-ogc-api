@@ -4,6 +4,11 @@ import logging
 import os
 from pathlib import Path
 
+from deploy.tracing import setup_tracing
+
+# Må stå før pygeoapi importeres
+setup_tracing()
+
 from flask import Response, abort, jsonify, request
 from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 from pygeoapi import l10n
