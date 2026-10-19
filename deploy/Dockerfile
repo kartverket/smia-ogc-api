@@ -3,7 +3,7 @@
 FROM ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 AS uv
 
 # ---------- Byggesteg ----------
-FROM dhi.io/python:3.12-dev@sha256:c690df7b786e2ce24ab2a07b63356fbf28dbbb29f488435c1b6e3ffeed8827a8 AS builder
+FROM dhi.io/python:3.12-dev@sha256:882085059e651dd4953cf52eaad67dd3b1240ba798be32081b92fdde9968fc3a AS builder
 
 USER root
 
