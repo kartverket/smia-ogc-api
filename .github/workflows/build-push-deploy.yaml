@@ -79,6 +79,9 @@ jobs:
           allow_severity_level: critical
           image_url: ${{ needs.build.outputs.image_url }}
           trivy_vex: "true"
+          trivy_vex_provider: dhi
+          docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          docker_token: ${{ secrets.DOCKERHUB_TOKEN }}
 
   deploy-argo:
     permissions:
