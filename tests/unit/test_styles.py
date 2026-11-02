@@ -2,6 +2,9 @@ import importlib
 from pathlib import Path
 
 import pytest
+import yaml
+
+from deploy.openapi import add_styles_to_openapi
 
 
 @pytest.fixture
@@ -110,3 +113,46 @@ def test_advertises_styles_conformance(styles_client):
         "http://www.opengis.net/spec/ogcapi-styles-1/1.0/conf/core"
         in (response.json["conformsTo"])
     )
+
+
+def test_adds_styles_endpoints_to_generated_openapi(tmp_path):
+    openapi_path = tmp_path / "openapi.yml"
+    config_path = tmp_path / "config.yml"
+    openapi_path.write_text(
+        yaml.safe_dump(
+            {
+                "paths": {
+                    "/collections/bopliktomraade": {"get": {"tags": ["Bopliktområde"]}}
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "resources": {
+                    "bopliktomraade": {
+                        "type": "collection",
+                        "styles": [{"id": "standard"}],
+                    },
+                    "bopliktsjekk": {"type": "process"},
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    add_styles_to_openapi(str(openapi_path), str(config_path))
+
+    paths = yaml.safe_load(openapi_path.read_text(encoding="utf-8"))["paths"]
+    styles_list = paths["/collections/bopliktomraade/styles"]["get"]
+    style_document = paths["/collections/bopliktomraade/styles/{style_id}"]["get"]
+    assert styles_list["tags"] == ["Bopliktområde"]
+    assert styles_list["responses"]["200"]["content"]["application/json"]
+    assert "/collections/bopliktsjekk/styles" not in paths
+    assert style_document["parameters"][0]["name"] == "style_id"
+    assert style_document["responses"]["200"]["content"][
+        "application/vnd.mapbox.style+json"
+    ]
+    assert {"400", "404", "500"} <= set(style_document["responses"])
