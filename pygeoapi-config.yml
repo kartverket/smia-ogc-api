@@ -84,7 +84,13 @@ resources:
         geom_field: omrade
         properties:
           - lokalId
+          - kommunenavn
           - kommunenummer
+          - forskriftsreferanse
+          - ikrafttredelse
+          - opphevelse
+          - oppdateringsdato
+          - malemetode
           - gjelderKunDelAvKommunen
           - gjelderForBruktSomHelarsbolig
           - gjelderForBoligIkkeTattIBruk
