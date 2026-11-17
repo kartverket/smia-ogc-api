@@ -22,7 +22,6 @@ class Column(StrEnum):
     GJELDER_FOR_UBEBYGD_BOLIGTOMT = "gjelderForUbebygdBoligtomt"
     HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK = "harUnntakFraSlektskapsunntak"
     ANDRE_LOKALE_AVGRENSNINGER = "andreLokaleAvgrensninger"
-    HAR_USIKKER_AVGRENSNING = "harUsikkerAvgrensning"
 
 
 _COLUMNS = [
@@ -32,7 +31,6 @@ _COLUMNS = [
     Column.GJELDER_FOR_UBEBYGD_BOLIGTOMT.value,
     Column.HAR_UNNTAK_FRA_SLEKTSKAPSUNNTAK.value,
     Column.ANDRE_LOKALE_AVGRENSNINGER.value,
-    Column.HAR_USIKKER_AVGRENSNING.value,
 ]
 
 

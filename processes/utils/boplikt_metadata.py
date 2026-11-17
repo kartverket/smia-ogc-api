@@ -35,10 +35,6 @@ BOPLIKTSJEKK_OUTPUT = {
                     "nullable": True,
                     "description": "Andre lokale begrensninger eller vilkår som ikke dekkes av de andre feltene.",
                 },
-                Column.HAR_USIKKER_AVGRENSNING.value: {
-                    "type": "boolean",
-                    "description": "Angir om bopliktsområdets geometriske avgrensning er usikker og må vurderes manuelt i tråd med forskriften. Verdi = True: Avgrensningen er usikker. Verdi = False: Avgrensningen er ikke usikker.",
-                },
             },
         },
     }

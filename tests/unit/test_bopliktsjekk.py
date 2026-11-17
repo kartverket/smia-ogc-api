@@ -46,7 +46,6 @@ def kommune_rad(gjelder_kun_del_av_kommunen):
         "gjelderForUbebygdBoligtomt": False,
         "harUnntakFraSlektskapsunntak": True,
         "andreLokaleAvgrensninger": None,
-        "harUsikkerAvgrensning": False,
     }
 
 
