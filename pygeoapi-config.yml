@@ -21,7 +21,8 @@ server:
   admin: false
   api_rules:
     api_version: 1.0.0
-    url_prefix: "v{api_major}" # adds a /v1 prefix to all URL paths
+    # Fast prefiks: URL-en skal ikke følge api_version. Se README, "Versjonering".
+    url_prefix: "v1"
 
 logging:
   level: INFO

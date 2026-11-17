@@ -74,6 +74,25 @@ Data lagres og serveres i EPSG:25833 (EUREF89 UTM sone 33) uten transformasjon.
 `DB_CONNECT_TIMEOUT` styrer tidsgrensen for å opprette en databasetilkobling (sekunder per adresse,
 standard 5).
 
+### Versjonering
+
+Versjonen av APIet settes i `server.api_rules.api_version` i `pygeoapi-config.yml`. Den havner i
+generert OpenAPI som `info.version` og vises i Swagger. Vi bruker SemVer:
+
+- **PATCH/MINOR:** bakoverkompatible endringer, som nye endepunkter, nye felt i responsen eller nye
+  valgfrie parametere.
+- **MAJOR:** brekkende endringer, som å fjerne eller endre endepunkter, felt eller parametere.
+
+URL-prefikset er fast `/v1` (`url_prefix: "v1"`) og følger ikke `api_version`. Ikke gjør det
+dynamisk: en ny MAJOR skal ikke endre URL-en. Vi har ikke planer om en `/v2`.
+
+Brekkende endringer går slik:
+
+1. Marker endepunktet eller feltet som utfaset (deprecated) og varsle på status.kartverket.no med
+   minst 3 måneder forvarsel.
+2. Fjern det etter varslingsperioden, og øk `api_version` til neste MAJOR i samme PR.
+3. Oppdater [ekstern dokumentasjon](https://github.com/kartverket/api-dokumentasjon) ved lansering.
+
 ### Stiler
 
 Samlingen `bopliktomraade` publiserer en standardstil etter OGC API - Styles:
