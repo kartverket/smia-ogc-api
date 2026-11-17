@@ -31,7 +31,10 @@ logging:
 metadata:
   identification:
     title: Administrative Inndelinger
-    description: "OGC API for Administrative Inndelinger. NB: APIet er under testing og kan endres på kort varsel. Dataendepunkter krever autentisering med API-nøkkel i X-API-Key-header, f.eks: curl -H 'X-API-Key: din-nøkkel'. Tilbakemeldinger mottas gjerne på e-post til kontaktperson."
+    description:
+      "OGC API for Administrative Inndelinger. NB: APIet er under testing og kan endres på kort
+      varsel. Dataendepunkter krever autentisering med API-nøkkel i X-API-Key-header, f.eks: curl -H
+      'X-API-Key: din-nøkkel'. Tilbakemeldinger mottas gjerne på e-post til kontaktperson."
     keywords:
       - boplikt
     keywords_type: theme
@@ -79,6 +82,15 @@ resources:
         title_field: kommunenummer
         table: bopliktomraade
         geom_field: omrade
+        properties:
+          - lokalId
+          - kommunenummer
+          - gjelderKunDelAvKommunen
+          - gjelderForBruktSomHelarsbolig
+          - gjelderForBoligIkkeTattIBruk
+          - gjelderForUbebygdBoligtomt
+          - harUnntakFraSlektskapsunntak
+          - andreLokaleAvgrensninger
         crs:
           - http://www.opengis.net/def/crs/EPSG/0/25833
         storage_crs: http://www.opengis.net/def/crs/EPSG/0/25833
