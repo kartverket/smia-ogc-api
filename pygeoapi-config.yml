@@ -21,7 +21,8 @@ server:
   admin: false
   api_rules:
     api_version: 1.0.0
-    url_prefix: "v{api_major}" # adds a /v1 prefix to all URL paths
+    # Fast prefiks: URL-en skal ikke følge api_version. Se README, "Versjonering".
+    url_prefix: "v1"
 
 logging:
   level: INFO
@@ -31,10 +32,10 @@ logging:
 metadata:
   identification:
     title: Administrative Inndelinger
-    description:
-      "OGC API for Administrative Inndelinger. NB: APIet er under testing og kan endres på kort
-      varsel. Dataendepunkter krever autentisering med API-nøkkel i X-API-Key-header, f.eks: curl -H
-      'X-API-Key: din-nøkkel'. Tilbakemeldinger mottas gjerne på e-post til kontaktperson."
+    description: >-
+      API-et tilbyr data om områder med nedsatt konsesjon i samsvar med OGC API -
+      Features-standarden. I tillegg tilbyr API-et en tjeneste for å sjekke om en matrikkelenhet
+      ligger innenfor, delvis innenfor eller utenfor et område med nedsatt konsesjon.
     keywords:
       - boplikt
     keywords_type: theme
@@ -47,8 +48,8 @@ metadata:
     name: " "
     url: " "
   contact:
-    name: Ingrid S Johnsrud
-    email: ingrid.synnove.johnsrud@kartverket.no
+    name: Kundesenteret i Kartverket
+    email: kundesenteret@kartverket.no
     role: pointOfContact
 
 resources:
