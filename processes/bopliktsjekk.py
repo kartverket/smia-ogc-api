@@ -29,6 +29,7 @@ from processes.utils.boplikt_db import (
     sjekk_kommune_boplikt,
 )
 from processes.utils.boplikt_metadata import BOPLIKTSJEKK_OUTPUT
+from processes.utils.feil import SERVERFEIL_MELDING
 from processes.utils.matrikkel_client import (
     get_matrikkel_client,
     hent_matrikkelenhet_med_teiger,
@@ -133,9 +134,7 @@ class BopliktSjekkProcessor(BaseProcessor):
         except Exception:
             # pygeoapi sender teksten fra andre unntak rett til kalleren.
             LOGGER.exception("Uventet feil i bopliktsjekk")
-            raise ProcessorExecuteError(
-                user_msg="En feil oppstod, prøv igjen senere."
-            ) from None
+            raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
         BOPLIKTSJEKK_RESULTAT.labels(resultat["iBopliktomrade"]).inc()
         return mimetype, resultat
 

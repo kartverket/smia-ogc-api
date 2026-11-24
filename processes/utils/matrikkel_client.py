@@ -16,6 +16,8 @@ from requests.auth import AuthBase
 from zeep import helpers
 from zeep.transports import Transport
 
+from processes.utils.feil import SERVERFEIL_MELDING
+
 LOGGER = logging.getLogger(__name__)
 
 # outcome: ok, not_found (matrikkelenheten finnes ikke), fault (annen SOAP-fault)
@@ -200,9 +202,7 @@ def get_matrikkel_client():
                 "(sjekk WSDL-URL, well-known-URL og credentials): %s",
                 e,
             )
-            raise ProcessorExecuteError(
-                user_msg="En feil oppstod, prøv igjen senere."
-            ) from None
+            raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
         except BaseException:
             # Ved worker-timeout avslutter gunicorn workeren med SystemExit.
             MATRIKKEL_KALL.labels("error").observe(time.monotonic() - start)
@@ -279,14 +279,10 @@ def hent_matrikkelenhet_med_teiger(client, kommunenummer, gardsnummer, bruksnumm
             ) from None
         outcome = "fault"
         LOGGER.error("SOAP fault: %s", e)
-        raise ProcessorExecuteError(
-            user_msg="En feil oppstod, prøv igjen senere."
-        ) from None
+        raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
     except Exception as e:  # noqa: BLE001
         LOGGER.error("SOAP error (%s): %s", type(e).__name__, e)
-        raise ProcessorExecuteError(
-            user_msg="En feil oppstod, prøv igjen senere."
-        ) from None
+        raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
     finally:
         MATRIKKEL_KALL.labels(outcome).observe(time.monotonic() - start)
 

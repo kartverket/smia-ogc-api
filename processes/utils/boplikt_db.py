@@ -10,6 +10,8 @@ from psycopg2.errors import QueryCanceled
 from psycopg2.pool import ThreadedConnectionPool
 from pygeoapi.process.base import ProcessorExecuteError
 
+from processes.utils.feil import SERVERFEIL_MELDING
+
 LOGGER = logging.getLogger(__name__)
 
 _DB_SCHEMA = os.environ.get("DB_SCHEMA", "inndelinger")
@@ -66,9 +68,7 @@ def _get_pool():
             )
         except Exception as e:  # noqa: BLE001
             LOGGER.error("Kunne ikke opprette databasetilkobling: %s", e)
-            raise ProcessorExecuteError(
-                user_msg="En feil oppstod, prøv igjen senere."
-            ) from None
+            raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
     return _db_pool
 
 
@@ -87,26 +87,20 @@ def _execute_query(sql, params):
                 return cur.fetchall()
         except QueryCanceled:
             LOGGER.error("Databasespørringen ble avbrutt")
-            raise ProcessorExecuteError(
-                user_msg="En feil oppstod, prøv igjen senere."
-            ) from None
+            raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
         except (OperationalError, InterfaceError) as e:
             LOGGER.warning(
                 "Ugyldig databasetilkobling (forsøk %d/2): %s", attempt + 1, e
             )
         except Exception as e:  # noqa: BLE001
             LOGGER.error("Databasefeil: %s", e)
-            raise ProcessorExecuteError(
-                user_msg="En feil oppstod, prøv igjen senere."
-            ) from None
+            raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
         finally:
             if conn is not None:
                 db_pool.putconn(conn, close=bool(conn.closed))
 
     LOGGER.error("Databasen er utilgjengelig etter 2 forsøk")
-    raise ProcessorExecuteError(
-        user_msg="En feil oppstod, prøv igjen senere."
-    ) from None
+    raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
 
 
 def get_cols():
