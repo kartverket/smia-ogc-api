@@ -61,3 +61,6 @@ databasekolonner publiseres ikke automatisk.
 
 Uventede feil logges med traceback, men detaljer om interne feil sendes ikke til
 kalleren. pygeoapi returnerer HTTP 400 med en generell feilmelding ved prosessfeil.
+Feil hos oss eller avhengighetene våre (Matrikkel, database, uventede feil) er ikke
+kallerens feil, så `deploy/wsgi.py` endrer disse til HTTP 503. Ugyldig input og
+matrikkelenhet som ikke finnes gir fortsatt 400.

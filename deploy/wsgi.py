@@ -17,6 +17,7 @@ from pygeoapi.flask_app import APP as app
 from pygeoapi.flask_app import api_
 
 from processes.bopliktsjekk import PROCESS_METADATA as _BOPLIKTSJEKK_METADATA
+from processes.utils.feil import SERVERFEIL_MELDING
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +174,36 @@ def set_security_headers(response):
     )
     response.headers.pop("X-Powered-By", None)
     response.headers.pop("Server", None)
+    return response
+
+
+@app.after_request
+def serverfeil_i_prosess_gir_503(response):
+    # pygeoapi svarer 400 på alle prosessfeil, også når Matrikkel eller databasen
+    # er nede. Det er ikke kalleren sin feil, så vi svarer 503.
+    # pygeoapi erstatter response.headers med en vanlig dict, så is_json og
+    # get_json finner ikke Content-Type. content_type slår opp med riktig casing.
+    media_type = (response.content_type or "").partition(";")[0].strip().lower()
+    if (
+        request.method != "POST"
+        or request.path.rstrip("/") != "/v1/processes/bopliktsjekk/execution"
+        or response.status_code != 400
+        or media_type != "application/json"
+    ):
+        return response
+    try:
+        payload = json.loads(response.get_data(as_text=True))
+    except (TypeError, ValueError):
+        return response
+    # Med "response": "document" pakker pygeoapi feilen inn i {"outputs": [...]}.
+    if isinstance(payload, dict) and isinstance(payload.get("outputs"), list):
+        payload = payload["outputs"][0] if len(payload["outputs"]) == 1 else None
+    if (
+        isinstance(payload, dict)
+        and payload.get("description")
+        == f"Error executing process: {SERVERFEIL_MELDING}"
+    ):
+        response.status_code = 503
     return response
 
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from prometheus_client import generate_latest
+from pygeoapi.process.base import ProcessorExecuteError
 
 from processes import bopliktsjekk
 from processes.bopliktsjekk import BopliktSjekkProcessor
@@ -98,13 +99,67 @@ def test_gyldig_request_kjoerer_prosessen(client, api_headers, monkeypatch):
     assert response.json == {"iBopliktomrade": "NEI"}
 
 
+@pytest.mark.parametrize("path", [EXECUTION, f"{EXECUTION}/"])
 def test_uventet_feil_lekker_ikke_til_kalleren(
-    client, api_headers, monkeypatch, caplog
+    client, api_headers, monkeypatch, caplog, path
 ):
     intern_feil = 'could not translate host name "db" to address'
 
     def feiler(kommunenummer):
         raise RuntimeError(intern_feil)
+
+    monkeypatch.setattr(bopliktsjekk, "sjekk_kommune_boplikt", feiler)
+
+    response = client.post(
+        path,
+        json={"inputs": {"kommunenummer": "0301", "gardsnummer": 1, "bruksnummer": 1}},
+        headers=api_headers,
+    )
+
+    assert response.status_code == 503
+    assert response.json == {
+        "code": "InvalidParameterValue",
+        "description": "Error executing process: En feil oppstod, prøv igjen senere.",
+    }
+    assert intern_feil not in response.text
+    assert intern_feil in caplog.text
+    assert "Traceback (most recent call last)" in caplog.text
+
+
+def test_serverfeil_gir_503_ogsaa_med_document_respons(
+    client, api_headers, monkeypatch
+):
+    def feiler(kommunenummer):
+        raise RuntimeError("db nede")
+
+    monkeypatch.setattr(bopliktsjekk, "sjekk_kommune_boplikt", feiler)
+
+    response = client.post(
+        EXECUTION,
+        json={
+            "inputs": {"kommunenummer": "0301", "gardsnummer": 1, "bruksnummer": 1},
+            "response": "document",
+        },
+        headers=api_headers,
+    )
+
+    assert response.status_code == 503
+    assert response.json == {
+        "outputs": [
+            {
+                "code": "InvalidParameterValue",
+                "description": "Error executing process: "
+                "En feil oppstod, prøv igjen senere.",
+            }
+        ]
+    }
+
+
+def test_ukjent_matrikkelenhet_gir_fortsatt_400(client, api_headers, monkeypatch):
+    melding = "Matrikkelenheten ble ikke funnet."
+
+    def feiler(kommunenummer):
+        raise ProcessorExecuteError(user_msg=melding)
 
     monkeypatch.setattr(bopliktsjekk, "sjekk_kommune_boplikt", feiler)
 
@@ -115,13 +170,7 @@ def test_uventet_feil_lekker_ikke_til_kalleren(
     )
 
     assert response.status_code == 400
-    assert response.json == {
-        "code": "InvalidParameterValue",
-        "description": "Error executing process: En feil oppstod, prøv igjen senere.",
-    }
-    assert intern_feil not in response.text
-    assert intern_feil in caplog.text
-    assert "Traceback (most recent call last)" in caplog.text
+    assert response.json["description"] == f"Error executing process: {melding}"
 
 
 @pytest.mark.parametrize("extra", [{"response": "raw"}, {"outputs": {}}])
