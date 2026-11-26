@@ -283,9 +283,7 @@ def hent_matrikkelenhet_med_teiger(client, kommunenummer, gardsnummer, bruksnumm
         raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
     except requests.exceptions.Timeout as e:
         LOGGER.error("Timeout mot Matrikkel (%s): %s", type(e).__name__, e)
-        raise ProcessorExecuteError(
-            user_msg="Matrikkelen svarte ikke i tide, prøv igjen senere."
-        ) from None
+        raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
     except Exception as e:  # noqa: BLE001
         LOGGER.error("SOAP error (%s): %s", type(e).__name__, e)
         raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
