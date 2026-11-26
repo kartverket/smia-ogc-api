@@ -226,7 +226,8 @@ def create_matrikkel_client():
     settings = zeep.Settings(strict=False, xml_huge_tree=True)
     session = Session()
     session.auth = MatrikkelTokenAuth(username, password, well_known_url)
-    transport = Transport(session=session)
+    # Må være kortere enn gunicorn --timeout, ellers drepes workeren først
+    transport = Transport(session=session, timeout=(5, 20), operation_timeout=20)
     return zeep.Client(wsdl=wsdl, settings=settings, transport=transport)
 
 
@@ -280,6 +281,11 @@ def hent_matrikkelenhet_med_teiger(client, kommunenummer, gardsnummer, bruksnumm
         outcome = "fault"
         LOGGER.error("SOAP fault: %s", e)
         raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
+    except requests.exceptions.Timeout as e:
+        LOGGER.error("Timeout mot Matrikkel (%s): %s", type(e).__name__, e)
+        raise ProcessorExecuteError(
+            user_msg="Matrikkelen svarte ikke i tide, prøv igjen senere."
+        ) from None
     except Exception as e:  # noqa: BLE001
         LOGGER.error("SOAP error (%s): %s", type(e).__name__, e)
         raise ProcessorExecuteError(user_msg=SERVERFEIL_MELDING) from None
