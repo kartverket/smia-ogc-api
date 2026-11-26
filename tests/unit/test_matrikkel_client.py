@@ -54,6 +54,7 @@ def test_vellykket_kall_telles_som_ok():
         (zeep.exceptions.Fault("Matrikkelenheten finnes ikke"), "not_found"),
         (zeep.exceptions.Fault("Uventet feil"), "fault"),
         (requests.ConnectionError("nede"), "error"),
+        (requests.ReadTimeout("treg"), "error"),
     ],
 )
 def test_feilet_kall_telles_med_riktig_utfall(feil, outcome):
